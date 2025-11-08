@@ -2,10 +2,10 @@
 
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
+import { CheckCircle, XCircle, Wifi, Bitcoin, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Wifi, Bitcoin, Zap, Coins } from "lucide-react";
 import { FMCDBalance, FMCDInfo } from "@/lib/types/fmcd";
+import { Badge } from "@/components/ui/badge";
 
 export function FMCDStatusCards() {
   const params = useParams<{ teamId: string }>();
@@ -55,9 +55,9 @@ export function FMCDStatusCards() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+      <div className="flex flex-col sm:flex-row gap-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="flex-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Loading...</CardTitle>
             </CardHeader>
@@ -103,9 +103,9 @@ export function FMCDStatusCards() {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="flex flex-col sm:flex-row gap-4">
       {/* Connection Status */}
-      <Card>
+      <Card className="flex-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">FMCD Status</CardTitle>
           <Wifi className="h-4 w-4 text-muted-foreground" />
@@ -123,8 +123,25 @@ export function FMCDStatusCards() {
         </CardContent>
       </Card>
 
+      {/* Federations Count */}
+      <Card className="flex-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Federations</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {info?.federations ? info.federations.length : 0}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {info?.federations && info.federations.length !== 1 ? "federations" : "federation"}{" "}
+            connected
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Total Balance */}
-      <Card>
+      <Card className="flex-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
           <Bitcoin className="h-4 w-4 text-muted-foreground" />
@@ -134,34 +151,6 @@ export function FMCDStatusCards() {
             {balance ? `${formatSats(balance.total_msats)} sats` : "No data"}
           </div>
           <p className="text-xs text-muted-foreground">Across all modules</p>
-        </CardContent>
-      </Card>
-
-      {/* Lightning Balance */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Lightning</CardTitle>
-          <Zap className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {balance ? `${formatSats(balance.lightning_msats)} sats` : "0 sats"}
-          </div>
-          <p className="text-xs text-muted-foreground">Lightning Network balance</p>
-        </CardContent>
-      </Card>
-
-      {/* Ecash Balance */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Ecash</CardTitle>
-          <Coins className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {balance ? `${formatSats(balance.ecash_msats)} sats` : "0 sats"}
-          </div>
-          <p className="text-xs text-muted-foreground">Fedimint Ecash balance</p>
         </CardContent>
       </Card>
     </div>

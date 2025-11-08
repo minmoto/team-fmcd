@@ -2,6 +2,7 @@ import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
 import { FMCDBalance } from "@/lib/types/fmcd";
 import { getTeamConfig } from "@/lib/storage/team-storage";
+import { fmcdRequest, ensureNumber } from "@/lib/fmcd/utils";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
@@ -32,33 +33,47 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       return NextResponse.json({ error: "FMCD configuration is not active" }, { status: 403 });
     }
 
-    try {
-      // Create Basic Auth header
-      const auth = Buffer.from(`fmcd:${config.password}`).toString("base64");
+    // Use the info endpoint to get federation data, which includes balance information
+    const response = await fmcdRequest<any>({
+      endpoint: "/v2/admin/info",
+      config,
+      maxRetries: 3,
+      timeoutMs: 10000,
+    });
 
-      // Proxy request to FMCD instance for balance
-      const response = await fetch(`${config.baseUrl}/v2/admin/balance`, {
-        method: "GET",
-        headers: {
-          Authorization: `Basic ${auth}`,
-          "Content-Type": "application/json",
-        },
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        return NextResponse.json(
-          { error: `FMCD error: ${response.status} ${response.statusText}` },
-          { status: response.status }
-        );
-      }
-
-      const data: FMCDBalance = await response.json();
-      return NextResponse.json(data);
-    } catch (error) {
-      console.error("Error connecting to FMCD:", error);
-      return NextResponse.json({ error: "Failed to connect to FMCD instance" }, { status: 503 });
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: response.status });
     }
+
+    if (!response.data) {
+      return NextResponse.json({ error: "No balance data received from FMCD" }, { status: 502 });
+    }
+
+    // Calculate total balance from all federations
+    let totalBalance = 0;
+
+    if (response.data && typeof response.data === "object") {
+      Object.values(response.data).forEach((federationData: any) => {
+        if (
+          federationData &&
+          typeof federationData === "object" &&
+          federationData.totalAmountMsat
+        ) {
+          totalBalance += ensureNumber(federationData.totalAmountMsat, 0);
+        }
+      });
+    }
+
+    // Build balance response (simplified since FMCD doesn't break down by module type)
+    const cleanedBalance: FMCDBalance = {
+      total_msats: totalBalance,
+      ecash_msats: totalBalance, // FMCD primarily manages ecash
+      lightning_msats: 0, // Not separately tracked in this API
+      onchain_sats: 0, // Not separately tracked in this API
+    };
+
+    console.log("[FMCD Balance] Successfully fetched balance data");
+    return NextResponse.json(cleanedBalance);
   } catch (error) {
     console.error("Error in FMCD balance endpoint:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

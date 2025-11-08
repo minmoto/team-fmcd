@@ -1,14 +1,9 @@
 import { Metadata } from "next";
-
-import { RecentSales } from "@/app/dashboard/[teamId]/(overview)/recent-sales";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Graph } from "./graph";
 import { FMCDStatusCards } from "@/components/fmcd-status-cards";
-import { FMCDFederations } from "@/components/fmcd-federations";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Example dashboard app built using the components.",
+  title: "FMCD Dashboard",
+  description: "Fedimint Client Daemon (FMCD) dashboard for teams.",
 };
 
 export default function DashboardPage() {
@@ -22,7 +17,7 @@ export default function DashboardPage() {
 
           <FMCDStatusCards />
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -120,8 +115,7 @@ export default function DashboardPage() {
                 <Graph />
               </CardContent>
             </Card>
-            <FMCDFederations />
-          </div>
+          </div> */}
         </div>
       </div>
     </>

@@ -9,7 +9,6 @@ import {
   Globe,
   Locate,
   Settings2,
-  ShoppingBag,
   ShoppingCart,
   Users,
 } from "lucide-react";
@@ -29,7 +28,7 @@ const navigationItems: SidebarItem[] = [
   {
     name: "Federations",
     href: "/federations",
-    icon: ShoppingBag,
+    icon: Users,
     type: "item",
   },
   {

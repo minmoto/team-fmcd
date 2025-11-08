@@ -92,6 +92,64 @@ This dashboard integrates with FMCD (Fedimint Client Daemon) instances to provid
 
 ### Components
 
-- `FMCDConfigComponent`: Admin configuration interface
-- `FMCDStatusCards`: Dashboard status cards showing balances
-- `FMCDFederations`: Federation information display
+**Configuration & Management:**
+
+- `FMCDConfigComponent` (`/components/fmcd-config.tsx`): Admin configuration interface for FMCD settings
+
+**Dashboard Display:**
+
+- `FMCDStatusCards` (`/components/fmcd-status-cards.tsx`): Overview cards showing balances and federation count
+- `FederationCard` (`/components/federation-card.tsx`): Reusable component for displaying individual federation details
+
+**Pages:**
+
+- `/dashboard/[teamId]/(overview)` - Main dashboard with status cards and summary view
+- `/dashboard/[teamId]/federations` - Detailed federation management page with data fetching logic
+- `/dashboard/[teamId]/configuration` - FMCD instance configuration for team admins
+
+### Data Storage
+
+FMCD configurations are stored using Stack Auth's `team.serverMetadata` which provides:
+
+- Secure server-side storage of credentials
+- Automatic encryption and team isolation
+- No additional encryption layer needed
+- Integration with Stack Auth's permission system
+
+Storage structure:
+
+```typescript
+team.serverMetadata = {
+  fmcdConfig: {
+    baseUrl: string,
+    password: string,
+    isActive: boolean,
+    createdAt: string,
+    updatedAt: string,
+    createdBy: string,
+    lastModifiedBy: string
+  },
+  fmcdStatus: {
+    isConnected: boolean,
+    lastChecked: string,
+    version?: string,
+    error?: string
+  }
+}
+```
+
+### Architecture Pattern
+
+The FMCD integration follows a clean component architecture:
+
+1. **Standalone Components**: `FederationCard` for reusable UI elements
+2. **Page-Level Data Management**: Federation page handles its own state and API calls
+3. **Presentational Overview**: Status cards show high-level summaries
+4. **Admin Controls**: Configuration isolated to admin-only interfaces
+
+This pattern ensures:
+
+- Clean separation of concerns between data and presentation
+- Reusable components that can be used across pages
+- Centralized data fetching at the page level
+- Type-safe interfaces throughout

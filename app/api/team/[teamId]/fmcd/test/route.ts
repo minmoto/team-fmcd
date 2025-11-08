@@ -8,54 +8,149 @@ async function testFMCDConnection(
   password: string
 ): Promise<TestConnectionResponse> {
   try {
+    // Validate and normalize URL
+    let normalizedUrl = baseUrl.trim();
+    if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+      return {
+        isConnected: false,
+        error: "Invalid URL format",
+        details: "URL must start with http:// or https://",
+      };
+    }
+
+    // Remove trailing slash
+    normalizedUrl = normalizedUrl.replace(/\/$/, "");
+
     // Create Basic Auth header
     const auth = Buffer.from(`fmcd:${password}`).toString("base64");
 
-    // Test connection to FMCD instance
-    const response = await fetch(`${baseUrl}/v2/admin/info`, {
-      method: "GET",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(10000), // 10 second timeout
-    });
+    console.log(`[FMCD Test] Testing connection to ${normalizedUrl}/v2/admin/info`);
 
-    if (!response.ok) {
-      if (response.status === 401) {
+    // Test connection to FMCD instance with retry
+    const maxAttempts = 2;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const timeout = 10000 + (attempt - 1) * 5000; // 10s, then 15s
+
+        const response = await fetch(`${normalizedUrl}/v2/admin/info`, {
+          method: "GET",
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(timeout),
+        });
+
+        if (response.status === 401) {
+          console.error("[FMCD Test] Authentication failed");
+          return {
+            isConnected: false,
+            error: "Authentication failed",
+            details: "Invalid password. Please check your FMCD credentials.",
+          };
+        }
+
+        if (response.status === 404) {
+          console.error("[FMCD Test] Endpoint not found");
+          return {
+            isConnected: false,
+            error: "Endpoint not found",
+            details: "The /v2/admin/info endpoint was not found. Please check your FMCD version.",
+          };
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => response.statusText);
+          console.error(`[FMCD Test] HTTP ${response.status}: ${errorText}`);
+
+          // Retry on 5xx errors
+          if (response.status >= 500 && attempt < maxAttempts) {
+            console.log("[FMCD Test] Server error, retrying...");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+
+          return {
+            isConnected: false,
+            error: `HTTP ${response.status}`,
+            details: errorText || response.statusText,
+          };
+        }
+
+        // Parse response
+        const text = await response.text();
+        let data: any;
+
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error("[FMCD Test] Failed to parse JSON:", text.substring(0, 200));
+          return {
+            isConnected: false,
+            error: "Invalid response format",
+            details: "FMCD returned non-JSON response",
+          };
+        }
+
+        // Extract connection info
+        const federationCount = Array.isArray(data.federations) ? data.federations.length : 0;
+        const version = data.version || data.network || "Unknown";
+
+        console.log(
+          `[FMCD Test] Connection successful - Version: ${version}, Federations: ${federationCount}`
+        );
+
+        return {
+          isConnected: true,
+          version,
+          federationCount,
+        };
+      } catch (error) {
+        lastError = error as Error;
+
+        if (error instanceof Error && error.name === "AbortError" && attempt < maxAttempts) {
+          console.log("[FMCD Test] Timeout, retrying...");
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+
+        break;
+      }
+    }
+
+    // Handle final error
+    if (lastError instanceof Error) {
+      if (lastError.name === "AbortError") {
+        console.error("[FMCD Test] Connection timeout");
         return {
           isConnected: false,
-          error: "Authentication failed - check password",
+          error: "Connection timeout",
+          details: "Unable to reach FMCD instance. Please check the URL and network connectivity.",
         };
       }
+
+      console.error("[FMCD Test] Connection error:", lastError.message);
       return {
         isConnected: false,
-        error: `HTTP ${response.status}: ${response.statusText}`,
+        error: "Connection failed",
+        details: lastError.message,
       };
     }
 
-    const data = await response.json();
-
-    return {
-      isConnected: true,
-      version: data.version || "Unknown",
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        return {
-          isConnected: false,
-          error: "Connection timeout - check URL and network",
-        };
-      }
-      return {
-        isConnected: false,
-        error: error.message,
-      };
-    }
     return {
       isConnected: false,
-      error: "Unknown connection error",
+      error: "Unknown error",
+      details: "An unexpected error occurred while testing the connection",
+    };
+  } catch (error) {
+    console.error("[FMCD Test] Unexpected error:", error);
+    return {
+      isConnected: false,
+      error: "Test failed",
+      details: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

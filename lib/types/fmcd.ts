@@ -31,25 +31,29 @@ export interface TestConnectionResponse {
   isConnected: boolean;
   version?: string;
   error?: string;
+  details?: string; // Additional error details
+  federationCount?: number; // Number of federations if connected
 }
 
 export interface FMCDInfo {
-  network: string;
-  block_count: number;
-  synced_to: number;
+  network: string; // Extracted from first federation's network
   federations: Federation[];
+  // Note: FMCD /v2/admin/info API doesn't provide these fields:
+  // - block_count, synced_to, version, uptime, node_id
 }
 
 export interface Federation {
   federation_id: string;
-  balance_msat: number;
+  balance_msat: number; // Maps to totalAmountMsat from API
   config: {
     global: {
-      api_endpoints: Record<string, string>;
-      consensus_version: number;
-      federation_name: string;
+      federation_name?: string; // From meta.federation_name
+      meta?: Record<string, any>; // Contains federation_name and meta_external_url
+      network?: string; // Network the federation operates on
     };
   };
+  // Fields computed/assumed since not in API response
+  status?: "active" | "inactive" | "syncing";
 }
 
 export interface FMCDBalance {
