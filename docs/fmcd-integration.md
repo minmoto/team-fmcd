@@ -166,19 +166,20 @@ interface FMCDBalance {
 
 ## Implementation Plan
 
-### Phase 1: Configuration Management
+### Phase 1: Configuration Management ✅ COMPLETED
 
-1. Create TypeScript types for FMCD configuration
-2. Build admin-only configuration page
-3. Implement API routes for config CRUD operations
-4. Add connection testing functionality
+1. ✅ Create TypeScript types for FMCD configuration (`lib/types/fmcd.ts`)
+2. ✅ Build admin-only configuration page (`components/fmcd-config.tsx`)
+3. ✅ Implement API routes for config CRUD operations (`app/api/team/[teamId]/fmcd/`)
+4. ✅ Add connection testing functionality
+5. ✅ Implement Stack Auth `serverMetadata` storage (`lib/storage/team-storage.ts`)
 
-### Phase 2: Dashboard Integration
+### Phase 2: Dashboard Integration ✅ COMPLETED
 
-5. Update overview page to show FMCD status
-6. Create FMCD data proxy API routes
-7. Implement real-time status monitoring
-8. Add error handling and user feedback
+6. ✅ Update overview page to show FMCD status (`components/fmcd-status-cards.tsx`)
+7. ✅ Create FMCD data proxy API routes (balance, info endpoints)
+8. ✅ Implement real-time status monitoring
+9. ✅ Add error handling and user feedback
 
 ### Phase 3: Enhanced Features
 
@@ -187,13 +188,55 @@ interface FMCDBalance {
 11. Add balance monitoring and alerts
 12. Create audit logs for configuration changes
 
+## Data Persistence
+
+### Stack Auth Team Metadata Storage
+
+FMCD configurations are stored in Stack Auth's `team.serverMetadata` field, which provides:
+
+- **Native Security**: Stack Auth handles encryption and secure storage automatically
+- **Team Isolation**: Each team's configuration is completely isolated from other teams
+- **Server-Only Access**: `serverMetadata` is only accessible from server-side code, never exposed to clients
+- **Built-in Reliability**: Leverages Stack Auth's proven infrastructure for data persistence
+
+#### Storage Structure
+
+```typescript
+team.serverMetadata = {
+  fmcdConfig: {
+    baseUrl: string,
+    password: string,
+    isActive: boolean,
+    createdAt: string,
+    updatedAt: string,
+    createdBy: string,
+    lastModifiedBy: string
+  },
+  fmcdStatus: {
+    isConnected: boolean,
+    lastChecked: string,
+    version?: string,
+    error?: string
+  }
+}
+```
+
+### Benefits of Stack Auth Storage
+
+- **No Custom Encryption**: Stack Auth's `serverMetadata` is designed for secure credential storage
+- **Automatic Backups**: Built into Stack Auth's infrastructure
+- **Team Permissions**: Naturally integrates with Stack Auth's team permission system
+- **Scalability**: Handles growth without additional infrastructure
+- **Compliance**: Benefits from Stack Auth's security certifications and compliance
+
 ## Security Considerations
 
 ### Data Storage
 
-- FMCD passwords will be encrypted at rest
-- Configuration data stored securely with team association
-- Access logs maintained for audit purposes
+- FMCD passwords stored in Stack Auth's secure `serverMetadata`
+- No additional encryption layer needed - Stack Auth handles security
+- Configuration data automatically associated with teams
+- Access logs maintained through Stack Auth's audit system
 
 ### API Security
 
@@ -242,13 +285,6 @@ interface FMCDBalance {
 - Generate reports for team administrators
 
 ## Future Enhancements
-
-### Multi-Instance Support
-
-- Support multiple FMCD instances per team
-- Load balancing across instances
-- Failover and redundancy configurations
-- Instance-specific routing for different use cases
 
 ### Advanced Features
 

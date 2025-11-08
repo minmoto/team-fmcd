@@ -1,7 +1,7 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
 import { FMCDBalance } from "@/lib/types/fmcd";
-import { getTeamConfig } from "@/lib/storage/fmcd-storage";
+import { getTeamConfig } from "@/lib/storage/team-storage";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    // Team members can access FMCD data, not just admins
+    // Team members can access FMCD data
     const config = await getTeamConfig(params.teamId);
 
     if (!config) {

@@ -11,7 +11,7 @@ import {
   saveTeamConfig,
   getTeamStatus,
   saveTeamStatus,
-} from "@/lib/storage/fmcd-storage";
+} from "@/lib/storage/team-storage";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     const status = (await getTeamStatus(params.teamId)) || {
       isConnected: false,
       lastChecked: new Date(),
-      error: "No configuration found",
+      error: config ? "No status available" : "No configuration found",
     };
 
     const response: GetConfigResponse = {
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ te
     const config: FMCDConfiguration = {
       teamId: params.teamId,
       baseUrl: body.baseUrl,
-      password: body.password, // In production, encrypt this
+      password: body.password,
       isActive: body.isActive,
       createdAt: existingConfig?.createdAt || now,
       updatedAt: now,

@@ -1,7 +1,7 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
 import { TestConnectionResponse } from "@/lib/types/fmcd";
-import { saveTeamStatus } from "@/lib/storage/fmcd-storage";
+import { saveTeamStatus } from "@/lib/storage/team-storage";
 
 async function testFMCDConnection(
   baseUrl: string,
