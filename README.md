@@ -5,25 +5,19 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
 ## Landing Page
 
 <div align="center">
-<img src="./assets/landing-page.png" alt="Teams" width="600"/>
+<img src="./assets/dashboard-landing.png" alt="team fmcd dashboard landing page" width="600"/>
 </div>
 
-## Dashboard
+## Quick Overview
 
 <div align="center">
-<img src="./assets/dashboard-overview.png" alt="Teams" width="600"/>
+<img src="./assets/dashboard-overview.png" alt="team fmcd dashboard quick overview" width="600"/>
 </div>
 
-## Multi-tenancy (Teams)
+## Manage Federations
 
 <div align="center">
-<img src="./assets/team-switcher.png" alt="Teams" width="400"/>
-</div>
-
-## Account Settings
-
-<div align="center">
-<img src="./assets/account-settings.png" alt="Teams" width="500"/>
+<img src="./assets/dashboard-federations.png" alt="team fmcd dashboard manage federations" width="600"/>
 </div>
 
 ## Features
