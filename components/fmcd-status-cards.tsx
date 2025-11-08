@@ -55,14 +55,14 @@ export function FMCDStatusCards() {
 
   if (loading) {
     return (
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-6">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="flex-1">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+          <Card key={i} className="flex-1 p-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-lg font-semibold">Loading...</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+            <CardContent className="pt-2">
+              <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
             </CardContent>
           </Card>
         ))}
@@ -72,13 +72,15 @@ export function FMCDStatusCards() {
 
   if (error) {
     return (
-      <Card className="col-span-full">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2">
-            <XCircle className="w-5 h-5 text-red-500" />
-            <span className="text-red-600">FMCD not configured or unavailable</span>
+      <Card className="col-span-full p-2">
+        <CardContent className="p-8">
+          <div className="flex items-center space-x-3">
+            <XCircle className="w-8 h-8 text-red-500" />
+            <span className="text-xl font-semibold text-red-600">
+              FMCD not configured or unavailable
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-base text-muted-foreground mt-4">
             Configure your FMCD instance in the Configuration page to view Bitcoin data.
           </p>
         </CardContent>
@@ -88,13 +90,13 @@ export function FMCDStatusCards() {
 
   if (!balance && !info) {
     return (
-      <Card className="col-span-full">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2">
-            <Wifi className="w-5 h-5 text-yellow-500" />
-            <span className="text-yellow-600">FMCD not configured</span>
+      <Card className="col-span-full p-2">
+        <CardContent className="p-8">
+          <div className="flex items-center space-x-3">
+            <Wifi className="w-8 h-8 text-yellow-500" />
+            <span className="text-xl font-semibold text-yellow-600">FMCD not configured</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-base text-muted-foreground mt-4">
             Configure your FMCD instance in the Configuration page to view Bitcoin data.
           </p>
         </CardContent>
@@ -103,37 +105,40 @@ export function FMCDStatusCards() {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
+    <div className="flex flex-col lg:flex-row gap-6">
       {/* Connection Status */}
-      <Card className="flex-1">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">FMCD Status</CardTitle>
-          <Wifi className="h-4 w-4 text-muted-foreground" />
+      <Card className="flex-1 p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg font-semibold">FMCD Status</CardTitle>
+          <Wifi className="h-6 w-6 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2">
-            <Badge variant="default" className="bg-green-100 text-green-800">
-              <CheckCircle className="w-3 h-3 mr-1" />
+        <CardContent className="pt-2">
+          <div className="flex items-center space-x-3">
+            <Badge
+              variant="default"
+              className="bg-green-100 text-green-800 px-4 py-2 text-base font-medium"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
               Connected
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-4 font-medium">
             {info?.network && `Network: ${info.network}`}
           </p>
         </CardContent>
       </Card>
 
       {/* Federations Count */}
-      <Card className="flex-1">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Federations</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+      <Card className="flex-1 p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg font-semibold">Federations</CardTitle>
+          <Users className="h-6 w-6 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
+        <CardContent className="pt-2">
+          <div className="text-4xl font-bold mb-2">
             {info?.federations ? info.federations.length : 0}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground font-medium">
             {info?.federations && info.federations.length !== 1 ? "federations" : "federation"}{" "}
             connected
           </p>
@@ -141,16 +146,18 @@ export function FMCDStatusCards() {
       </Card>
 
       {/* Total Balance */}
-      <Card className="flex-1">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-          <Bitcoin className="h-4 w-4 text-muted-foreground" />
+      <Card className="flex-1 p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg font-semibold">Total Balance</CardTitle>
+          <Bitcoin className="h-6 w-6 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {balance ? `${formatSats(balance.total_msats)} sats` : "No data"}
+        <CardContent className="pt-2">
+          <div className="text-4xl font-bold mb-2">
+            {balance ? `${formatSats(balance.total_msats)}` : "No data"}
           </div>
-          <p className="text-xs text-muted-foreground">Across all modules</p>
+          <p className="text-sm text-muted-foreground font-medium">
+            {balance ? "sats across all federations" : "Across all federations"}
+          </p>
         </CardContent>
       </Card>
     </div>
