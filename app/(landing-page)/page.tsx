@@ -36,12 +36,7 @@ export default async function IndexPage() {
         credits={
           <>
             Crafted with ❤️ by{" "}
-            <a
-              href="https://stack-auth.com"
-              target="_blank"
-              rel="noreferrer"
-              className="underline"
-            >
+            <a href="https://stack-auth.com" target="_blank" rel="noreferrer" className="underline">
               Stack Auth
             </a>
           </>
@@ -60,8 +55,7 @@ export default async function IndexPage() {
               </svg>
             ),
             title: "Next.js 14",
-            description:
-              "Utilize the latest features: App Router, Layouts, Suspense.",
+            description: "Utilize the latest features: App Router, Layouts, Suspense.",
           },
           {
             icon: (
@@ -96,8 +90,7 @@ export default async function IndexPage() {
               </svg>
             ),
             title: "Shadcn UI",
-            description:
-              "Modern and fully customizable UI components based on Tailwind CSS.",
+            description: "Modern and fully customizable UI components based on Tailwind CSS.",
           },
           {
             icon: (
@@ -113,8 +106,7 @@ export default async function IndexPage() {
               </svg>
             ),
             title: "Stack Auth",
-            description:
-              "Comprehensive Authentication: OAuth, User Management, and more.",
+            description: "Comprehensive Authentication: OAuth, User Management, and more.",
           },
           {
             icon: <Users className="h-12 w-12" />,

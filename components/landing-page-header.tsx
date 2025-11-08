@@ -23,17 +23,11 @@ function SignInSignUpButtons() {
   const app = useStackApp();
   return (
     <>
-      <Link
-        href={app.urls.signIn}
-        className={buttonVariants({ variant: "secondary" })}
-      >
+      <Link href={app.urls.signIn} className={buttonVariants({ variant: "secondary" })}>
         Sign In
       </Link>
 
-      <Link
-        href={app.urls.signUp}
-        className={buttonVariants({ variant: "default" })}
-      >
+      <Link href={app.urls.signUp} className={buttonVariants({ variant: "default" })}>
         Sign Up
       </Link>
     </>
@@ -45,10 +39,7 @@ function AuthButtonsInner() {
 
   if (user) {
     return (
-      <Link
-        href="/dashboard"
-        className={buttonVariants({ variant: "default" })}
-      >
+      <Link href="/dashboard" className={buttonVariants({ variant: "default" })}>
         Dashboard
       </Link>
     );
@@ -105,9 +96,7 @@ function DesktopItems(props: NavProps) {
           href={item.disabled ? "#" : item.href}
           className={cn(
             "flex items-center text-lg font-medium transition-colors hover:text-foreground/80 sm:text-sm",
-            item.href.startsWith(`/${segment}`)
-              ? "text-foreground"
-              : "text-foreground/60",
+            item.href.startsWith(`/${segment}`) ? "text-foreground" : "text-foreground/60",
             item.disabled && "cursor-not-allowed opacity-80"
           )}
           target={item.external ? "_blank" : undefined}
@@ -137,11 +126,7 @@ export function LandingPageHeader(props: NavProps) {
             size="icon"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
           >
-            {showMobileMenu ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
 
           <Logo className="md:hidden" />

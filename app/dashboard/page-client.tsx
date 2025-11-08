@@ -24,12 +24,10 @@ export function PageClient() {
       <div className="flex items-center justify-center h-screen w-screen">
         <div className="max-w-xs w-full">
           <h1 className="text-center text-2xl font-semibold">Welcome!</h1>
-          <p className="text-center text-gray-500">
-            Create a team to get started
-          </p>
+          <p className="text-center text-gray-500">Create a team to get started</p>
           <form
             className="mt-4"
-            onSubmit={(e) => {
+            onSubmit={e => {
               e.preventDefault();
               user.createTeam({ displayName: teamDisplayName });
             }}
@@ -39,7 +37,7 @@ export function PageClient() {
               <Input
                 placeholder="Team name"
                 value={teamDisplayName}
-                onChange={(e) => setTeamDisplayName(e.target.value)}
+                onChange={e => setTeamDisplayName(e.target.value)}
               />
             </div>
             <Button className="mt-4 w-full">Create team</Button>

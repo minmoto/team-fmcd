@@ -24,9 +24,7 @@ type PricingCardProps = {
 export function PricingCard(props: PricingCardProps) {
   return (
     <Card
-      className={`w-full max-w-sm ${
-        props.isPopular ? "border-primary border-2 shadow-lg" : ""
-      }`}
+      className={`w-full max-w-sm ${props.isPopular ? "border-primary border-2 shadow-lg" : ""}`}
     >
       <CardHeader>
         <CardTitle className="text-2xl font-bold">{props.title}</CardTitle>
@@ -60,21 +58,12 @@ export function PricingCard(props: PricingCardProps) {
   );
 }
 
-export function PricingGrid(props: {
-  title: string;
-  subtitle: string;
-  items: PricingCardProps[];
-}) {
+export function PricingGrid(props: { title: string; subtitle: string; items: PricingCardProps[] }) {
   return (
-    <section
-      id="features"
-      className="container space-y-6 py-8 md:py-12 lg:py-24"
-    >
+    <section id="features" className="container space-y-6 py-8 md:py-12 lg:py-24">
       <div className="mx-auto flex max-w-6xl flex-col items-center space-y-4 text-center">
         <h2 className="text-3xl md:text-4xl font-semibold">{props.title}</h2>
-        <p className="max-w-[85%] text-muted-foreground sm:text-lg">
-          {props.subtitle}
-        </p>
+        <p className="max-w-[85%] text-muted-foreground sm:text-lg">{props.subtitle}</p>
       </div>
 
       <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-5xl md:grid-cols-3">

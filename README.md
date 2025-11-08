@@ -32,25 +32,25 @@ A minimalistic multi-tenant Next.js starter template with minimal setup and a mo
 
 1. Clone the repository
 
-    ```bash
-    git clone git@github.com:stack-auth/stack-template.git
-    ```
+   ```bash
+   git clone git@github.com:stack-auth/stack-template.git
+   ```
 
 2. Install dependencies
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. Register an account on [Stack Auth](https://stack-auth.com), copy the keys from the dashboard, and paste them into the `.env.local` file. Then, enable "client team creation" on the team settings tab.
 
-    If you want to learn more about Stack Auth or self-host it, check out the [Docs](https://docs.stack-auth.com) and [GitHub](https://github.com/stack-auth/stack).
+   If you want to learn more about Stack Auth or self-host it, check out the [Docs](https://docs.stack-auth.com) and [GitHub](https://github.com/stack-auth/stack).
 
 4. Start the development server and go to [http://localhost:3000](http://localhost:3000)
 
-    ```bash
-    npm run dev 
-    ```
+   ```bash
+   npm run dev
+   ```
 
 ## Features & Tech Stack
 
