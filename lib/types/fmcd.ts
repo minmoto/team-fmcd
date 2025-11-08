@@ -78,3 +78,14 @@ export interface FMCDTransaction {
   federation_id?: string;
   description?: string;
 }
+
+export interface OnchainAddressRequest {
+  federationId?: string;
+}
+
+export interface OnchainAddressResponse {
+  success: boolean;
+  address: string;
+  operationId?: string;
+  federationId?: string;
+}

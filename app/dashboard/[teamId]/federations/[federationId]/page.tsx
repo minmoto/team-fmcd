@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,16 +19,18 @@ import {
   Network,
   Globe,
   Info,
+  Plus,
 } from "lucide-react";
 import { FMCDInfo, Federation } from "@/lib/types/fmcd";
+import { DepositModal } from "@/components/deposit-modal";
 
 export default function FederationDetailsPage() {
   const params = useParams<{ teamId: string; federationId: string }>();
-  const router = useRouter();
   const [federation, setFederation] = useState<Federation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadFederation() {
@@ -181,10 +183,12 @@ export default function FederationDetailsPage() {
           <h2 className="text-3xl font-bold tracking-tight">{federationName}</h2>
           <p className="text-sm text-muted-foreground">Federation details and information</p>
         </div>
-        <Badge variant={connectionStatus.variant} className="h-fit">
-          <StatusIcon className="w-3 h-3 mr-1" />
-          {connectionStatus.label}
-        </Badge>
+        <div className="flex items-center space-x-3">
+          <Button onClick={() => setIsDepositModalOpen(true)} className="h-fit">
+            <Plus className="w-4 h-4 mr-2" />
+            Deposit
+          </Button>
+        </div>
       </div>
 
       {/* Overview Cards */}
@@ -339,6 +343,12 @@ export default function FederationDetailsPage() {
           </CardContent>
         </Card>
       )}
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        federation={federation}
+      />
     </div>
   );
 }

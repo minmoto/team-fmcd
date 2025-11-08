@@ -15,8 +15,10 @@ import {
   Copy,
   ExternalLink,
   ArrowRight,
+  Plus,
 } from "lucide-react";
 import { Federation } from "@/lib/types/fmcd";
+import { DepositModal } from "@/components/deposit-modal";
 
 interface FederationCardProps {
   federation: Federation;
@@ -25,6 +27,7 @@ interface FederationCardProps {
 export function FederationCard({ federation }: FederationCardProps) {
   const params = useParams<{ teamId: string }>();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
 
   const formatSats = (msats: number) => {
     return (msats / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -128,14 +131,26 @@ export function FederationCard({ federation }: FederationCardProps) {
           </div>
         )}
 
-        {/* View Details Button */}
-        <Button variant="outline" className="w-full mt-4" asChild>
-          <Link href={`/dashboard/${params.teamId}/federations/${federation.federation_id}`}>
-            View Details
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Link>
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-2 mt-4">
+          <Button onClick={() => setIsDepositModalOpen(true)} className="flex-1" size="sm">
+            <Plus className="w-4 h-4 mr-2" />
+            Deposit
+          </Button>
+          <Button variant="outline" className="flex-1" size="sm" asChild>
+            <Link href={`/dashboard/${params.teamId}/federations/${federation.federation_id}`}>
+              View Details
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </Button>
+        </div>
       </CardContent>
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        federation={federation}
+      />
     </Card>
   );
 }
