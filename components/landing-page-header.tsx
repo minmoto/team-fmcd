@@ -23,17 +23,11 @@ function SignInSignUpButtons() {
   const app = useStackApp();
   return (
     <>
-      <Link
-        href={app.urls.signIn}
-        className={buttonVariants({ variant: "secondary" })}
-      >
+      <Link href={app.urls.signIn} className={buttonVariants({ variant: "secondary" })}>
         Sign In
       </Link>
 
-      <Link
-        href={app.urls.signUp}
-        className={buttonVariants({ variant: "default" })}
-      >
+      <Link href={app.urls.signUp} className={buttonVariants({ variant: "default" })}>
         Sign Up
       </Link>
     </>
@@ -45,10 +39,7 @@ function AuthButtonsInner() {
 
   if (user) {
     return (
-      <Link
-        href="/dashboard"
-        className={buttonVariants({ variant: "default" })}
-      >
+      <Link href="/dashboard" target="_blank" className={buttonVariants({ variant: "default" })}>
         Dashboard
       </Link>
     );
@@ -105,9 +96,7 @@ function DesktopItems(props: NavProps) {
           href={item.disabled ? "#" : item.href}
           className={cn(
             "flex items-center text-lg font-medium transition-colors hover:text-foreground/80 sm:text-sm",
-            item.href.startsWith(`/${segment}`)
-              ? "text-foreground"
-              : "text-foreground/60",
+            item.href.startsWith(`/${segment}`) ? "text-foreground" : "text-foreground/60",
             item.disabled && "cursor-not-allowed opacity-80"
           )}
           target={item.external ? "_blank" : undefined}
@@ -124,8 +113,8 @@ export function LandingPageHeader(props: NavProps) {
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
 
   return (
-    <header className="fixed w-full z-50 bg-background/80 px-4 md:px-8 backdrop-blur">
-      <div className="flex h-18 items-center justify-between py-4">
+    <header className="fixed w-full z-50 bg-background/80 backdrop-blur">
+      <div className="container flex h-18 items-center justify-between py-4">
         <div className="flex items-center gap-4 md:gap-10">
           <Logo className="hidden md:flex" />
 
@@ -137,11 +126,7 @@ export function LandingPageHeader(props: NavProps) {
             size="icon"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
           >
-            {showMobileMenu ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            {showMobileMenu ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
 
           <Logo className="md:hidden" />
