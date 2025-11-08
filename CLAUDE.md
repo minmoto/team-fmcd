@@ -71,6 +71,7 @@ This dashboard integrates with FMCD (Fedimint Client Daemon) instances to provid
 - **Team-based Configuration**: Each team can configure their own FMCD instance
 - **Admin Controls**: Only team administrators can modify FMCD settings (base URL and password)
 - **Real-time Data**: Dashboard shows live balance, federation info, and connection status
+- **Federation Connection**: Team members can connect to new federations using invite codes
 - **Security**: All FMCD communication happens server-side with encrypted credentials
 
 ### FMCD Configuration
@@ -83,12 +84,21 @@ This dashboard integrates with FMCD (Fedimint Client Daemon) instances to provid
 3. Test connection before saving
 4. All team members can view the data, only admins can configure
 
+### Connecting to Federations
+
+1. Navigate to the Federations page in the team dashboard
+2. Click the "Connect Federation" button
+3. Enter the federation invite code provided by the federation administrator
+4. Click "Connect" to join the federation
+5. The new federation will appear in the federations list once connected
+
 ### API Endpoints
 
 - `/api/team/[teamId]/fmcd/config` - Configuration management (admin only)
 - `/api/team/[teamId]/fmcd/test` - Connection testing (admin only)
 - `/api/team/[teamId]/fmcd/info` - FMCD instance info (all team members)
 - `/api/team/[teamId]/fmcd/balance` - Wallet balance (all team members)
+- `/api/team/[teamId]/fmcd/connect` - Connect to new federation using invite code (all team members)
 
 ### Components
 
@@ -104,7 +114,7 @@ This dashboard integrates with FMCD (Fedimint Client Daemon) instances to provid
 **Pages:**
 
 - `/dashboard/[teamId]/(overview)` - Main dashboard with status cards and summary view
-- `/dashboard/[teamId]/federations` - Detailed federation management page with data fetching logic
+- `/dashboard/[teamId]/federations` - Detailed federation management page with data fetching logic and federation connection interface
 - `/dashboard/[teamId]/configuration` - FMCD instance configuration for team admins
 
 ### Data Storage

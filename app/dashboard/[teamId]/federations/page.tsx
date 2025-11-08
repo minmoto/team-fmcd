@@ -4,15 +4,22 @@ import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { XCircle, AlertTriangle, Network } from "lucide-react";
-import { FMCDInfo } from "@/lib/types/fmcd";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { FederationCard } from "@/components/federation-card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { XCircle, AlertTriangle, Network, Plus } from "lucide-react";
+import { FMCDInfo } from "@/lib/types/fmcd";
 
 export default function FederationsPage() {
   const params = useParams<{ teamId: string }>();
   const [info, setInfo] = useState<FMCDInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   const loadFMCDInfo = useCallback(async () => {
     try {
@@ -40,6 +47,46 @@ export default function FederationsPage() {
       loadFMCDInfo();
     }
   }, [params.teamId, loadFMCDInfo]);
+
+  const handleConnectFederation = async () => {
+    if (!inviteCode.trim()) {
+      setConnectError("Please enter a federation invite code");
+      return;
+    }
+
+    try {
+      setConnectLoading(true);
+      setConnectError(null);
+
+      const response = await fetch(`/api/team/${params.teamId}/fmcd/connect`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inviteCode: inviteCode.trim() }),
+      });
+
+      if (response.ok) {
+        // Success - close dialog and reload federation data
+        setIsConnectDialogOpen(false);
+        setInviteCode("");
+        await loadFMCDInfo();
+      } else {
+        const errorData = await response.json();
+        setConnectError(errorData.error || "Failed to connect to federation");
+      }
+    } catch (err) {
+      setConnectError("Network error occurred");
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setIsConnectDialogOpen(false);
+    setInviteCode("");
+    setConnectError(null);
+  };
 
   if (loading) {
     return (
@@ -144,7 +191,47 @@ export default function FederationsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
         <div className="flex items-center space-x-2">
-          {/* Future: Add federation management actions here */}
+          <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Connect Federation
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Connect New Federation</DialogTitle>
+                <DialogDescription>
+                  Enter the federation invite code to connect to a new federation. You can get this code from a federation administrator.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Federation invite code"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !connectLoading) {
+                        handleConnectFederation();
+                      }
+                    }}
+                  />
+                  {connectError && (
+                    <p className="text-sm text-red-600">{connectError}</p>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={handleDialogClose} disabled={connectLoading}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConnectFederation} disabled={connectLoading || !inviteCode.trim()}>
+                  {connectLoading ? "Connecting..." : "Connect"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       <div className="space-y-4">

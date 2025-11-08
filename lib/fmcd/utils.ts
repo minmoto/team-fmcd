@@ -7,6 +7,8 @@ import { FMCDConfiguration } from "@/lib/types/fmcd";
 export interface FMCDRequestOptions {
   endpoint: string;
   config: FMCDConfiguration;
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  body?: any;
   maxRetries?: number;
   baseDelay?: number;
   timeoutMs?: number;
@@ -43,7 +45,7 @@ export function createAuthHeader(password: string): string {
  * Makes a request to FMCD with retry logic and proper error handling
  */
 export async function fmcdRequest<T = any>(options: FMCDRequestOptions): Promise<FMCDResponse<T>> {
-  const { endpoint, config, maxRetries = 3, baseDelay = 1000, timeoutMs = 10000 } = options;
+  const { endpoint, config, method = "GET", body, maxRetries = 3, baseDelay = 1000, timeoutMs = 10000 } = options;
 
   try {
     const baseUrl = normalizeBaseUrl(config.baseUrl);
@@ -57,15 +59,16 @@ export async function fmcdRequest<T = any>(options: FMCDRequestOptions): Promise
         // Calculate timeout with increasing duration for retries
         const timeout = timeoutMs + attempt * 5000;
 
-        console.log(`[FMCD Request] Attempt ${attempt + 1}/${maxRetries} - ${endpoint}`);
+        console.log(`[FMCD Request] Attempt ${attempt + 1}/${maxRetries} - ${method} ${endpoint}`);
 
         const response = await fetch(fullUrl, {
-          method: "GET",
+          method,
           headers: {
             Authorization: auth,
             "Content-Type": "application/json",
             Accept: "application/json",
           },
+          body: body ? JSON.stringify(body) : undefined,
           signal: AbortSignal.timeout(timeout),
         });
 
