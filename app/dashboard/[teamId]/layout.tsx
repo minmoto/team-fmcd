@@ -32,12 +32,6 @@ const navigationItems: SidebarItem[] = [
     type: "item",
   },
   {
-    name: "Limits",
-    href: "/limits",
-    icon: Columns3,
-    type: "item",
-  },
-  {
     type: "label",
     name: "Transactions",
   },

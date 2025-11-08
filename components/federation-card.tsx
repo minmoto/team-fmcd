@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Shield,
   Coins,
@@ -11,6 +14,7 @@ import {
   AlertTriangle,
   Copy,
   ExternalLink,
+  ArrowRight,
 } from "lucide-react";
 import { Federation } from "@/lib/types/fmcd";
 
@@ -19,6 +23,7 @@ interface FederationCardProps {
 }
 
 export function FederationCard({ federation }: FederationCardProps) {
+  const params = useParams<{ teamId: string }>();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const formatSats = (msats: number) => {
@@ -122,6 +127,14 @@ export function FederationCard({ federation }: FederationCardProps) {
             </Badge>
           </div>
         )}
+
+        {/* View Details Button */}
+        <Button variant="outline" className="w-full mt-4" asChild>
+          <Link href={`/dashboard/${params.teamId}/federations/${federation.federation_id}`}>
+            View Details
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );
