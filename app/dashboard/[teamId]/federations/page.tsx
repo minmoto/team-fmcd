@@ -7,7 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FederationCard } from "@/components/federation-card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { XCircle, AlertTriangle, Network, Plus } from "lucide-react";
 import { FMCDInfo } from "@/lib/types/fmcd";
 
@@ -202,7 +210,8 @@ export default function FederationsPage() {
               <DialogHeader>
                 <DialogTitle>Connect New Federation</DialogTitle>
                 <DialogDescription>
-                  Enter the federation invite code to connect to a new federation. You can get this code from a federation administrator.
+                  Enter the federation invite code to connect to a new federation. You can get this
+                  code from a federation administrator.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -210,23 +219,24 @@ export default function FederationsPage() {
                   <Input
                     placeholder="Federation invite code"
                     value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={e => setInviteCode(e.target.value)}
+                    onKeyDown={e => {
                       if (e.key === "Enter" && !connectLoading) {
                         handleConnectFederation();
                       }
                     }}
                   />
-                  {connectError && (
-                    <p className="text-sm text-red-600">{connectError}</p>
-                  )}
+                  {connectError && <p className="text-sm text-red-600">{connectError}</p>}
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={handleDialogClose} disabled={connectLoading}>
                   Cancel
                 </Button>
-                <Button onClick={handleConnectFederation} disabled={connectLoading || !inviteCode.trim()}>
+                <Button
+                  onClick={handleConnectFederation}
+                  disabled={connectLoading || !inviteCode.trim()}
+                >
                   {connectLoading ? "Connecting..." : "Connect"}
                 </Button>
               </DialogFooter>

@@ -1,9 +1,8 @@
 import { FeatureGrid } from "@/components/features";
 import { Hero } from "@/components/hero";
-import { PricingGrid } from "@/components/pricing";
 import { stackServerApp } from "@/stack";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { ComponentIcon, Users, Bitcoin, Shield, Network, Zap } from "lucide-react";
+import { Users, Bitcoin, Shield, Network, Zap } from "lucide-react";
 
 export default async function IndexPage() {
   const project = await stackServerApp.getProject();
@@ -32,15 +31,25 @@ export default async function IndexPage() {
         primaryCtaText="Get Started"
         primaryCtaLink={stackServerApp.urls.signUp}
         secondaryCtaText="GitHub"
-        secondaryCtaLink="https://github.com/minmoto/fmcdash"
+        secondaryCtaLink="https://github.com/minmoto/team-fmcd"
         credits={
           <>
             Powered by{" "}
-            <a href="https://github.com/minmoto/fmcd" target="_blank" rel="noreferrer" className="underline">
+            <a
+              href="https://github.com/minmoto/fmcd"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
               FMCD
-            </a>
-            {" "}&{" "}
-            <a href="https://github.com/stack-auth/stack" target="_blank" rel="noreferrer" className="underline">
+            </a>{" "}
+            &{" "}
+            <a
+              href="https://github.com/stack-auth/stack"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
               Stack Auth
             </a>
           </>
@@ -55,12 +64,14 @@ export default async function IndexPage() {
           {
             icon: <Bitcoin className="h-12 w-12" />,
             title: "FMCD Integration",
-            description: "Connect to Fedimint Client Daemon instances and manage Bitcoin wallets collaboratively.",
+            description:
+              "Connect to Fedimint Client Daemon instances and manage Bitcoin wallets collaboratively.",
           },
           {
             icon: <Network className="h-12 w-12" />,
             title: "Wallet Management",
-            description: "Connect to federations using invite codes and monitor all your federated wallets.",
+            description:
+              "Connect to federations using invite codes and monitor all your federated wallets.",
           },
           {
             icon: <Zap className="h-12 w-12" />,
@@ -70,41 +81,19 @@ export default async function IndexPage() {
           {
             icon: <Users className="h-12 w-12" />,
             title: "Team Collaboration",
-            description: "Create teams with role-based permissions. Team admins configure, all members can view.",
+            description:
+              "Create teams with role-based permissions. Team admins configure, all members can view.",
           },
           {
             icon: <Shield className="h-12 w-12" />,
             title: "Secure & Private",
-            description: "Server-side FMCD communication with encrypted credentials. Complete team isolation.",
+            description:
+              "Server-side FMCD communication with encrypted credentials. Complete team isolation.",
           },
           {
             icon: <GitHubLogoIcon className="h-12 w-12" />,
             title: "100% Open-source",
             description: "Built with open-source tools: FMCD, Stack Auth, Next.js, and more.",
-          },
-        ]}
-      />
-
-      <div id="pricing" />
-      <PricingGrid
-        title="Open Source & Free"
-        subtitle="Self-host your own FMCD dashboard at no cost."
-        items={[
-          {
-            title: "Self-Hosted",
-            price: "Free Forever",
-            description: "Deploy and manage your own instance.",
-            features: [
-              "Full source code access",
-              "100% Open-source (MIT License)",
-              "Unlimited teams and users",
-              "Community support on GitHub",
-              "No credit card required",
-              "Self-hostable infrastructure",
-            ],
-            buttonText: "Get Started",
-            buttonHref: stackServerApp.urls.signUp,
-            isPopular: true,
           },
         ]}
       />

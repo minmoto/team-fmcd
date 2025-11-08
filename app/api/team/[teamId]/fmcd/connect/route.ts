@@ -58,13 +58,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ te
     }
 
     console.log(`[FMCD Connect] Successfully connected to federation`);
-    
+
     // Return success response
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: "Successfully connected to federation" 
+      message: "Successfully connected to federation",
     });
-    
   } catch (error) {
     console.error("Error in FMCD connect endpoint:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

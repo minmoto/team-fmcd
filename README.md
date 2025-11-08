@@ -29,6 +29,7 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
 ## Features
 
 ### FMCD Integration
+
 - **Team-based FMCD Instances**: Each team can configure their own FMCD instance with secure credential storage
 - **Federation Management**: Connect to federations using invite codes and view federation details
 - **Real-time Balance Tracking**: Monitor Bitcoin balances across all connected federations
@@ -36,11 +37,13 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
 - **Secure Communication**: All FMCD requests are proxied server-side with encrypted credentials
 
 ### Multi-tenancy
+
 - **Team Management**: Create and manage multiple teams powered by [Stack Auth](https://github.com/stack-auth/stack)
 - **Role-based Permissions**: Team admins can configure FMCD settings, all members can view data and connect federations
 - **Team Isolation**: Each team's FMCD configuration and data is completely isolated
 
 ### Tech Stack
+
 - Next.js 15 with App Router
 - TypeScript with strict mode
 - Tailwind CSS & Shadcn UI components
@@ -53,8 +56,8 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/minmoto/fmcdash.git
-   cd fmcdash
+   git clone https://github.com/minmoto/team-fmcd.git
+   cd team-fmcd
    ```
 
 2. Install dependencies
@@ -83,10 +86,12 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
 ## FMCD Configuration
 
 ### Prerequisites
+
 - A running [FMCD](https://github.com/minmoto/fmcd) instance
 - FMCD authentication password
 
 ### Setting up FMCD for a Team
+
 1. Navigate to the team dashboard
 2. Go to Configuration page (team admins only)
 3. Enter FMCD Base URL (e.g., `http://localhost:3333` or `https://your-fmcd-instance.com`)
@@ -95,6 +100,7 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
 6. Enable the integration and save
 
 ### Connecting to Federations
+
 1. Navigate to the Federations page
 2. Click "Connect Federation" button
 3. Enter the federation invite code

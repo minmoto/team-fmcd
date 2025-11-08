@@ -45,7 +45,15 @@ export function createAuthHeader(password: string): string {
  * Makes a request to FMCD with retry logic and proper error handling
  */
 export async function fmcdRequest<T = any>(options: FMCDRequestOptions): Promise<FMCDResponse<T>> {
-  const { endpoint, config, method = "GET", body, maxRetries = 3, baseDelay = 1000, timeoutMs = 10000 } = options;
+  const {
+    endpoint,
+    config,
+    method = "GET",
+    body,
+    maxRetries = 3,
+    baseDelay = 1000,
+    timeoutMs = 10000,
+  } = options;
 
   try {
     const baseUrl = normalizeBaseUrl(config.baseUrl);
