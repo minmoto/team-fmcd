@@ -1,0 +1,56 @@
+services:
+  app:
+    container_name: team-fmcd
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    user: "1000:1000" # Match host user to avoid permission issues
+    env_file:
+      - .env
+    ports:
+      - "3030:3030"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Preserve node_modules in container to avoid conflicts
+      - /app/node_modules
+      - /app/.next
+    working_dir: /app
+    command: ["npm", "run", "dev"]
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # For better file watching in Docker
+    healthcheck:
+      test:
+        ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3030/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: FMCD service for local development
+  # Uncomment when you want to run FMCD locally
+  # fmcd:
+  #   container_name: fmcd
+  #   image: okjodom/fmcd:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     - FMCD_DATA_DIR=/data
+  #     - FMCD_ADDR=0.0.0.0:7070
+  #     - FMCD_MODE=rest
+  #     # Set your federation invite code here
+  #     # - FMCD_INVITE_CODE=fed11qgqrgvnhwden5te0...
+  #   ports:
+  #     - "7070:7070"
+  #   volumes:
+  #     - fmcd_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7070/health"]
+  #     interval: 30s
+  #     timeout: 3s
+  #     retries: 3
+  #     start_period: 5s
+# volumes:
+#   fmcd_data:

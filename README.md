@@ -76,6 +76,14 @@ A multi-tenant dashboard for [Fedimint Client Daemon (FMCD)](https://github.com/
    npm run dev
    ```
 
+### With Docker
+
+For development with Docker (includes hot reload):
+
+```bash
+npm run docker
+```
+
 5. Configure FMCD instance for your team:
    - Create a team in the dashboard
    - Navigate to the Configuration page
