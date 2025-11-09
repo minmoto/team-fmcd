@@ -2,6 +2,14 @@ name: Docker Build and Publish
 
 on:
   push:
+    paths:
+      - package.json
+      - package-lock.json
+      - app/**
+      - components/**
+      - lib/**
+      - Dockerfile
+      - .github/workflows/docker-publish.yml
     branches:
       - main
       - master
@@ -33,9 +41,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          # Enable multi-platform builds
-          platforms: linux/amd64,linux/arm64
 
       # Login to Docker Hub
       - name: Login to Docker Hub
@@ -76,7 +81,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
