@@ -1,11 +1,11 @@
-import { stackServerApp } from "@/stack";
+import { getStackServerApp } from "@/stack";
 import { FMCDConfiguration, FMCDStatus } from "@/lib/types/fmcd";
 
 /**
  * Saves FMCD configuration to team's serverMetadata
  */
 export async function saveTeamConfig(teamId: string, config: FMCDConfiguration): Promise<void> {
-  const team = await stackServerApp.getTeam(teamId);
+  const team = await getStackServerApp().getTeam(teamId);
   if (!team) {
     throw new Error("Team not found");
   }
@@ -31,7 +31,7 @@ export async function saveTeamConfig(teamId: string, config: FMCDConfiguration):
  * Retrieves FMCD configuration from team's serverMetadata
  */
 export async function getTeamConfig(teamId: string): Promise<FMCDConfiguration | null> {
-  const team = await stackServerApp.getTeam(teamId);
+  const team = await getStackServerApp().getTeam(teamId);
   if (!team) {
     throw new Error("Team not found");
   }
@@ -58,7 +58,7 @@ export async function getTeamConfig(teamId: string): Promise<FMCDConfiguration |
  * Saves FMCD status to team's serverMetadata
  */
 export async function saveTeamStatus(teamId: string, status: FMCDStatus): Promise<void> {
-  const team = await stackServerApp.getTeam(teamId);
+  const team = await getStackServerApp().getTeam(teamId);
   if (!team) {
     throw new Error("Team not found");
   }
@@ -81,7 +81,7 @@ export async function saveTeamStatus(teamId: string, status: FMCDStatus): Promis
  * Retrieves FMCD status from team's serverMetadata
  */
 export async function getTeamStatus(teamId: string): Promise<FMCDStatus | null> {
-  const team = await stackServerApp.getTeam(teamId);
+  const team = await getStackServerApp().getTeam(teamId);
   if (!team) {
     throw new Error("Team not found");
   }

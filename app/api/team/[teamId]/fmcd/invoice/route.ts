@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stackServerApp } from "@/stack";
+import { getStackServerApp } from "@/stack";
 
 interface InvoiceRequest {
   federationId: string;
@@ -12,13 +12,13 @@ interface InvoiceRequest {
 export async function POST(req: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
     const { teamId } = await context.params;
-    const user = await stackServerApp.getUser();
+    const user = await getStackServerApp().getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const team = await stackServerApp.getTeam(teamId);
+    const team = await getStackServerApp().getTeam(teamId);
     if (!team) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }

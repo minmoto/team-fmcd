@@ -99,14 +99,11 @@ jobs:
           # Cache Docker layers
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Build arguments if needed
+          # Build arguments for metadata only
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ steps.meta.outputs.version }}
-            NEXT_PUBLIC_STACK_PROJECT_ID=${{ secrets.NEXT_PUBLIC_STACK_PROJECT_ID }}
-            NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=${{ secrets.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY }}
-            STACK_SECRET_SERVER_KEY=${{ secrets.STACK_SECRET_SERVER_KEY }}
 
       # Security scanning with Trivy
       - name: Run Trivy vulnerability scanner
