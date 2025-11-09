@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, CheckCircle, Coins, AlertTriangle, Loader2 } from "lucide-react";
-import { Federation } from "@/lib/types/fmcd";
+import { ArrowRight, CheckCircle, Coins, AlertTriangle, Loader2, Zap, Bitcoin } from "lucide-react";
+import { Federation, TransactionChannel } from "@/lib/types/fmcd";
 
 interface TransferFundsModalProps {
   isOpen: boolean;
@@ -38,6 +38,7 @@ interface TransferDetails {
   destinationFederation: Federation | null;
   amount: string;
   useMaxAmount: boolean;
+  transactionChannel: TransactionChannel;
 }
 
 export function TransferFundsModal({
@@ -53,6 +54,7 @@ export function TransferFundsModal({
     destinationFederation: null,
     amount: "",
     useMaxAmount: false,
+    transactionChannel: TransactionChannel.Lightning,
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,19 +68,79 @@ export function TransferFundsModal({
         destinationFederation: null,
         amount: "",
         useMaxAmount: false,
+        transactionChannel: TransactionChannel.Lightning,
       });
       setError(null);
       setLoading(false);
     }
   }, [isOpen]);
 
+  // Auto-select preferred channel when federations change
+  useEffect(() => {
+    if (details.sourceFederation && details.destinationFederation) {
+      const sourceHasGateways = (details.sourceFederation.gatewayCount ?? 0) > 0;
+      const destHasGateways = (details.destinationFederation.gatewayCount ?? 0) > 0;
+
+      // Prefer lightning if both have gateways, otherwise onchain
+      const preferredChannel =
+        sourceHasGateways && destHasGateways
+          ? TransactionChannel.Lightning
+          : TransactionChannel.Bitcoin;
+
+      setDetails(prev => ({
+        ...prev,
+        transactionChannel: preferredChannel,
+      }));
+    }
+  }, [details.sourceFederation, details.destinationFederation]);
+
   // Show all federations for source selection (including 0 balance)
   const allFederationsForSource = federations;
 
-  // Filter destination federations (exclude source)
+  // Filter destination federations (exclude source and match network)
   const destinationFederations = federations.filter(
-    fed => fed.federation_id !== details.sourceFederation?.federation_id
+    fed =>
+      fed.federation_id !== details.sourceFederation?.federation_id &&
+      fed.config.global.network === details.sourceFederation?.config.global.network
   );
+
+  // Channel availability logic
+  const getAvailableChannels = (): TransactionChannel[] => {
+    if (!details.sourceFederation || !details.destinationFederation) {
+      return [TransactionChannel.Lightning, TransactionChannel.Bitcoin];
+    }
+
+    const sourceHasGateways = (details.sourceFederation.gatewayCount ?? 0) > 0;
+    const destHasGateways = (details.destinationFederation.gatewayCount ?? 0) > 0;
+
+    const channels: TransactionChannel[] = [];
+
+    // Lightning only available if both federations have gateways
+    if (sourceHasGateways && destHasGateways) {
+      channels.push(TransactionChannel.Lightning);
+    }
+
+    // Bitcoin always available
+    channels.push(TransactionChannel.Bitcoin);
+
+    return channels;
+  };
+
+  const getPreferredChannel = (): TransactionChannel => {
+    const availableChannels = getAvailableChannels();
+
+    if (!details.sourceFederation || !details.destinationFederation) {
+      return TransactionChannel.Lightning;
+    }
+
+    const sourceHasGateways = (details.sourceFederation.gatewayCount ?? 0) > 0;
+    const destHasGateways = (details.destinationFederation.gatewayCount ?? 0) > 0;
+
+    // Prefer lightning if both have gateways, otherwise bitcoin
+    return sourceHasGateways && destHasGateways
+      ? TransactionChannel.Lightning
+      : TransactionChannel.Bitcoin;
+  };
 
   const formatSats = (msats: number) => {
     return (msats / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -114,12 +176,23 @@ export function TransferFundsModal({
     return true;
   };
 
+  // Pure validation function without side effects for render-time checks
+  const isAmountValid = () => {
+    if (details.useMaxAmount) return true;
+
+    const amount = parseFloat(details.amount);
+    if (isNaN(amount) || amount <= 0) return false;
+
+    const maxSats = getMaxTransferSats();
+    return amount <= maxSats;
+  };
+
   const canProceedToConfirm = () => {
     return (
       details.sourceFederation &&
       details.sourceFederation.balance_msat > 0 &&
       details.destinationFederation &&
-      (details.useMaxAmount || (details.amount && validateAmount()))
+      (details.useMaxAmount || (details.amount && isAmountValid()))
     );
   };
 
@@ -155,34 +228,68 @@ export function TransferFundsModal({
 
       const transferAmountMsats = getTransferAmount() * 1000;
 
-      // Step 1: Get lightning address from destination federation
-      const addressResponse = await fetch(`/api/team/${params.teamId}/fmcd/lightning-address`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          federationId: details.destinationFederation!.federation_id,
-          amountMsat: transferAmountMsats,
-        }),
-      });
+      if (details.transactionChannel === TransactionChannel.Lightning) {
+        // Lightning transfer via invoice
+        // Step 1: Get lightning invoice from destination federation
+        const invoiceResponse = await fetch(`/api/team/${params.teamId}/fmcd/lightning-address`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            federationId: details.destinationFederation!.federation_id,
+            amountMsat: transferAmountMsats,
+          }),
+        });
 
-      if (!addressResponse.ok) {
-        throw new Error("Failed to generate lightning address");
-      }
+        if (!invoiceResponse.ok) {
+          throw new Error("Failed to generate lightning invoice");
+        }
 
-      const { invoice } = await addressResponse.json();
+        const { invoice } = await invoiceResponse.json();
 
-      // Step 2: Pay the invoice from source federation
-      const payResponse = await fetch(`/api/team/${params.teamId}/fmcd/pay-invoice`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          federationId: details.sourceFederation!.federation_id,
-          invoice,
-        }),
-      });
+        // Step 2: Pay the invoice from source federation
+        const payResponse = await fetch(`/api/team/${params.teamId}/fmcd/pay-invoice`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            federationId: details.sourceFederation!.federation_id,
+            invoice,
+          }),
+        });
 
-      if (!payResponse.ok) {
-        throw new Error("Failed to complete payment");
+        if (!payResponse.ok) {
+          throw new Error("Failed to complete lightning payment");
+        }
+      } else {
+        // Onchain transfer via Bitcoin address
+        // Step 1: Get Bitcoin address from destination federation
+        const addressResponse = await fetch(`/api/team/${params.teamId}/fmcd/address`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            federationId: details.destinationFederation!.federation_id,
+          }),
+        });
+
+        if (!addressResponse.ok) {
+          throw new Error("Failed to generate Bitcoin address");
+        }
+
+        const { address } = await addressResponse.json();
+
+        // Step 2: Send Bitcoin to the address from source federation
+        const sendResponse = await fetch(`/api/team/${params.teamId}/fmcd/send-onchain`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            federationId: details.sourceFederation!.federation_id,
+            address,
+            amountSats: Math.floor(transferAmountMsats / 1000),
+          }),
+        });
+
+        if (!sendResponse.ok) {
+          throw new Error("Failed to complete onchain transfer");
+        }
       }
 
       setStep("complete");
@@ -221,6 +328,7 @@ export function TransferFundsModal({
               destinationFederation: null, // Reset destination when source changes
               amount: "",
               useMaxAmount: false,
+              transactionChannel: TransactionChannel.Lightning, // Reset to default
             }));
             setError(null);
           }}
@@ -277,6 +385,86 @@ export function TransferFundsModal({
               ))}
             </SelectContent>
           </Select>
+          {destinationFederations.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No destination federations available on the{" "}
+              {details.sourceFederation.config.global.network} network
+            </p>
+          )}
+        </div>
+      )}
+
+      {details.sourceFederation && details.destinationFederation && (
+        <div className="space-y-3">
+          <Label htmlFor="transaction-channel">Transaction Channel</Label>
+          <div className="space-y-2">
+            {getAvailableChannels().length > 1 ? (
+              <Select
+                value={details.transactionChannel}
+                onValueChange={(value: TransactionChannel) => {
+                  setDetails(prev => ({
+                    ...prev,
+                    transactionChannel: value,
+                  }));
+                }}
+              >
+                <SelectTrigger id="transaction-channel">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAvailableChannels().includes(TransactionChannel.Lightning) && (
+                    <SelectItem value={TransactionChannel.Lightning}>
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        <div>
+                          <div className="font-medium">Lightning Network</div>
+                          <div className="text-xs text-muted-foreground">Fast, low fees</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  )}
+                  <SelectItem value={TransactionChannel.Bitcoin}>
+                    <div className="flex items-center gap-2">
+                      <Bitcoin className="w-4 h-4" />
+                      <div>
+                        <div className="font-medium">Bitcoin On-chain</div>
+                        <div className="text-xs text-muted-foreground">
+                          More secure, higher fees
+                        </div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                {details.transactionChannel === TransactionChannel.Lightning ? (
+                  <>
+                    <Zap className="w-4 h-4" />
+                    <div>
+                      <div className="font-medium">Lightning Network</div>
+                      <div className="text-xs text-muted-foreground">
+                        Both federations have gateways
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Bitcoin className="w-4 h-4" />
+                    <div>
+                      <div className="font-medium">Bitcoin On-chain</div>
+                      <div className="text-xs text-muted-foreground">
+                        {(details.sourceFederation.gatewayCount ?? 0) === 0 ||
+                        (details.destinationFederation.gatewayCount ?? 0) === 0
+                          ? "Lightning not available - missing gateways"
+                          : "On-chain transfer"}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -344,6 +532,34 @@ export function TransferFundsModal({
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Channel</span>
+              <div className="flex items-center space-x-2">
+                {details.transactionChannel === TransactionChannel.Lightning ? (
+                  <>
+                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <span className="font-medium">Lightning Network</span>
+                  </>
+                ) : (
+                  <>
+                    <Bitcoin className="w-4 h-4 text-orange-500" />
+                    <span className="font-medium">Bitcoin On-chain</span>
+                  </>
+                )}
+              </div>
+            </div>
+            {details.transactionChannel === TransactionChannel.Lightning ? (
+              <div className="text-xs text-muted-foreground mt-1">
+                Fast transfer via Lightning invoice
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground mt-1">
+                Secure transfer via Bitcoin address
+              </div>
+            )}
           </div>
 
           <div className="text-xs text-muted-foreground pt-2">

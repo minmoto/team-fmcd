@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bitcoin, Zap, Copy, CheckCircle, QrCode, AlertCircle, Info } from "lucide-react";
-import { Federation } from "@/lib/types/fmcd";
+import { Federation, TransactionChannel } from "@/lib/types/fmcd";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -19,14 +19,9 @@ interface DepositModalProps {
   federation: Federation;
 }
 
-enum DepositTabs {
-  Lightning = "lightning",
-  Onchain = "onchain",
-}
-
 // Type guard function to ensure runtime type safety
-function isValidDepositTab(value: string): value is DepositTabs {
-  return Object.values(DepositTabs).includes(value as DepositTabs);
+function isValidTransactionChannel(value: string): value is TransactionChannel {
+  return Object.values(TransactionChannel).includes(value as TransactionChannel);
 }
 
 export function DepositModal({ isOpen, onClose, federation }: DepositModalProps) {
@@ -35,9 +30,7 @@ export function DepositModal({ isOpen, onClose, federation }: DepositModalProps)
   // Check if lightning functionality is available based on gateway count
   const hasLightningGateways = (federation.gatewayCount ?? 0) > 0;
 
-  const [activeTab, setActiveTab] = useState(
-    hasLightningGateways ? DepositTabs.Lightning : DepositTabs.Onchain
-  );
+  const [activeTab, setActiveTab] = useState(TransactionChannel.Lightning);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [isGeneratingAddress, setIsGeneratingAddress] = useState(false);
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
@@ -48,6 +41,15 @@ export function DepositModal({ isOpen, onClose, federation }: DepositModalProps)
   const [addressError, setAddressError] = useState<string | null>(null);
   const [addressQrCode, setAddressQrCode] = useState<string>("");
   const [invoiceQrCode, setInvoiceQrCode] = useState<string>("");
+
+  // Set default tab based on gateway availability when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(
+        hasLightningGateways ? TransactionChannel.Lightning : TransactionChannel.Bitcoin
+      );
+    }
+  }, [isOpen, hasLightningGateways]);
 
   // Generate QR code for deposit address
   useEffect(() => {
@@ -195,7 +197,7 @@ export function DepositModal({ isOpen, onClose, federation }: DepositModalProps)
   };
 
   const resetModal = () => {
-    setActiveTab(hasLightningGateways ? DepositTabs.Lightning : DepositTabs.Onchain);
+    // Tab will be set by useEffect based on gateway availability
     setDepositAddress("");
     setLightningInvoice("");
     setInvoiceAmount("");
@@ -215,7 +217,7 @@ export function DepositModal({ isOpen, onClose, federation }: DepositModalProps)
 
   const handleTabChange = (value: string) => {
     // Type-safe validation using type guard
-    if (isValidDepositTab(value)) {
+    if (isValidTransactionChannel(value)) {
       setActiveTab(value);
     }
   };
@@ -251,17 +253,17 @@ export function DepositModal({ isOpen, onClose, federation }: DepositModalProps)
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value={DepositTabs.Lightning} className="flex items-center gap-2">
+            <TabsTrigger value={TransactionChannel.Lightning} className="flex items-center gap-2">
               <Zap className="w-4 h-4" />
               Lightning
             </TabsTrigger>
-            <TabsTrigger value={DepositTabs.Onchain} className="flex items-center gap-2">
+            <TabsTrigger value={TransactionChannel.Bitcoin} className="flex items-center gap-2">
               <Bitcoin className="w-4 h-4" />
-              Onchain
+              Bitcoin
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value={DepositTabs.Lightning} className="space-y-4">
+          <TabsContent value={TransactionChannel.Lightning} className="space-y-4">
             {hasLightningGateways && (
               <div className="space-y-3">
                 <div>
@@ -400,7 +402,7 @@ export function DepositModal({ isOpen, onClose, federation }: DepositModalProps)
             )}
           </TabsContent>
 
-          <TabsContent value={DepositTabs.Onchain} className="space-y-4">
+          <TabsContent value={TransactionChannel.Bitcoin} className="space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Bitcoin Address</Label>
