@@ -30,6 +30,17 @@ EXPOSE 3030
 CMD ["npm", "run", "dev"]
 
 # Production dependencies stage
+FROM base AS prod-deps
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy only package files for better caching
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --frozen-lockfile && npm cache clean --force
+
+# All dependencies stage (for building)
 FROM base AS deps
 
 RUN apk add --no-cache libc6-compat
@@ -38,18 +49,10 @@ WORKDIR /app
 
 # Copy only package files for better caching
 COPY package.json package-lock.json ./
-RUN npm ci --only=production
+RUN npm ci --frozen-lockfile && npm cache clean --force
 
 # Production builder stage
-FROM base AS builder
-
-RUN apk add --no-cache libc6-compat
-
-WORKDIR /app
-
-# Install all dependencies (including dev dependencies for build)
-COPY package.json package-lock.json ./
-RUN npm ci
+FROM deps AS builder
 
 # Copy source code
 COPY . .
@@ -83,8 +86,8 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy production dependencies from deps stage
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+# Copy production dependencies from prod-deps stage
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Copy built application from builder stage
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
