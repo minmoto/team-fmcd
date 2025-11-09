@@ -1,4 +1,4 @@
-import { stackServerApp } from "@/stack";
+import { getStackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
 import { TestConnectionResponse } from "@/lib/types/fmcd";
 import { saveTeamStatus } from "@/lib/storage/team-storage";
@@ -158,7 +158,7 @@ async function testFMCDConnection(
 export async function POST(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
     const params = await context.params;
-    const user = await stackServerApp.getUser();
+    const user = await getStackServerApp().getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

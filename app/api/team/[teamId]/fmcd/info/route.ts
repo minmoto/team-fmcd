@@ -1,4 +1,4 @@
-import { stackServerApp } from "@/stack";
+import { getStackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
 import { FMCDInfo, Federation, Gateway, GatewayResponse } from "@/lib/types/fmcd";
 import { getTeamConfig, saveTeamStatus } from "@/lib/storage/team-storage";
@@ -37,7 +37,7 @@ async function fetchFederationGateways(
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
     const params = await context.params;
-    const user = await stackServerApp.getUser();
+    const user = await getStackServerApp().getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

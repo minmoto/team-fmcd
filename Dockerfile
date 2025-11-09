@@ -36,12 +36,7 @@ RUN npm ci
 # Copy source and build
 COPY . .
 
-# Build arguments for Stack Auth
-ARG NEXT_PUBLIC_STACK_PROJECT_ID
-ARG NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
-
-ENV NEXT_PUBLIC_STACK_PROJECT_ID=$NEXT_PUBLIC_STACK_PROJECT_ID
-ENV NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=$NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
+# No build-time Stack Auth variables needed - using lazy initialization
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
@@ -59,16 +54,15 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built application using Next.js standalone output
 COPY --from=installer --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=installer --chown=nextjs:nodejs /public ./public
 
-# Create public directory if needed
-RUN mkdir -p public && chown nextjs:nodejs public
-
-USER nextjs
-
+# Stack Auth variables provided at runtime via environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3030
+
+USER nextjs
 
 EXPOSE 3030
 
