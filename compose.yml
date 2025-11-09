@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     user: "1000:1000" # Match host user to avoid permission issues
     env_file:
-      - .env
+      - .env.local
     ports:
       - "3030:3030"
     volumes:
@@ -16,7 +16,6 @@ services:
       - .:/app
       # Preserve node_modules in container to avoid conflicts
       - /app/node_modules
-      - /app/.next
     working_dir: /app
     command: ["npm", "run", "dev"]
     environment:
@@ -32,25 +31,28 @@ services:
 
   # Optional: FMCD service for local development
   # Uncomment when you want to run FMCD locally
-  # fmcd:
-  #   container_name: fmcd
-  #   image: okjodom/fmcd:latest
-  #   restart: unless-stopped
-  #   environment:
-  #     - FMCD_DATA_DIR=/data
-  #     - FMCD_ADDR=0.0.0.0:7070
-  #     - FMCD_MODE=rest
-  #     # Set your federation invite code here
-  #     # - FMCD_INVITE_CODE=fed11qgqrgvnhwden5te0...
-  #   ports:
-  #     - "7070:7070"
-  #   volumes:
-  #     - fmcd_data:/data
-  #   healthcheck:
-  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7070/health"]
-  #     interval: 30s
-  #     timeout: 3s
-  #     retries: 3
-  #     start_period: 5s
-# volumes:
-#   fmcd_data:
+  fmcd:
+    container_name: fmcd
+    image: okjodom/fmcd:latest
+    environment:
+      - RUST_LOG=debug,fmcd=info,fedimint_client=info,fedimint_core=info,fedimint_ln_client=debug,fedimint_mint_client=info,fedimint_wallet_client=info
+      - RUST_BACKTRACE=1
+      - FMCD_LOG_FORMAT=json
+      - FMCD_DATA_DIR=/data
+      - FMCD_ADDR=0.0.0.0:7070
+      - FMCD_MODE=rest
+      - FMCD_INVITE_CODE=fed11qgqrgvnhwden5te0v9k8q6rp9ekh2arfdeukuet595cr2ttpd3jhq6rzve6zuer9wchxvetyd938gcewvdhk6tcqqysptkuvknc7erjgf4em3zfh90kffqf9srujn6q53d6r056e4apze5cw27h75
+    ports:
+      - 7070:7070
+    volumes:
+      - fmcd_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7070/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  fmcd_data:

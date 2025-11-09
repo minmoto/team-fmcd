@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stackServerApp } from "@/stack";
 
-interface InvoiceRequest {
+interface PayInvoiceRequest {
   federationId: string;
-  gatewayId: string;
-  amountMsat: number;
-  description: string;
-  expiryTime?: number;
+  invoice: string;
+  allowOverpay?: boolean;
 }
 
 export async function POST(req: NextRequest, context: { params: Promise<{ teamId: string }> }) {
@@ -28,11 +26,16 @@ export async function POST(req: NextRequest, context: { params: Promise<{ teamId
       return NextResponse.json({ error: "FMCD not configured for this team" }, { status: 400 });
     }
 
-    const body: InvoiceRequest = await req.json();
-    const { federationId, gatewayId, amountMsat, description, expiryTime } = body;
+    const body: PayInvoiceRequest = await req.json();
+    const { federationId, invoice, allowOverpay } = body;
 
-    // Call FMCD to create invoice
-    const fmcdUrl = `${fmcdConfig.baseUrl}/v2/ln/invoice`;
+    // Validate request
+    if (!federationId || !invoice) {
+      return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 });
+    }
+
+    // Call FMCD to pay the invoice from the source federation
+    const fmcdUrl = `${fmcdConfig.baseUrl}/v2/ln/pay`;
     const fmcdResponse = await fetch(fmcdUrl, {
       method: "POST",
       headers: {
@@ -41,29 +44,27 @@ export async function POST(req: NextRequest, context: { params: Promise<{ teamId
       },
       body: JSON.stringify({
         federationId,
-        gatewayId,
-        amountMsat,
-        description,
-        expiryTime: expiryTime || 3600, // Default to 1 hour
+        paymentRequest: invoice,
+        allowOverpay: allowOverpay || false,
       }),
     });
 
     if (!fmcdResponse.ok) {
       const errorText = await fmcdResponse.text();
-      console.error("FMCD invoice error:", fmcdResponse.status, errorText);
+      console.error("FMCD payment error:", fmcdResponse.status, errorText);
       return NextResponse.json(
-        { error: `FMCD error: ${fmcdResponse.status} - ${errorText}` },
+        { error: `Payment failed: ${fmcdResponse.status} - ${errorText}` },
         { status: fmcdResponse.status }
       );
     }
 
-    const invoice = await fmcdResponse.json();
+    const result = await fmcdResponse.json();
 
-    return NextResponse.json(invoice);
+    return NextResponse.json(result);
   } catch (error: any) {
-    console.error("Invoice creation error:", error);
+    console.error("Payment error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create invoice" },
+      { error: error.message || "Failed to process payment" },
       { status: 500 }
     );
   }

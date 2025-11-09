@@ -15,10 +15,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Create user for development (matches host user)
+# Create user for development (but don't use it to match host user)
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs && \
     chown -R nextjs:nodejs /app
+# USER nextjs  # Commented out for development to match host user
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=development

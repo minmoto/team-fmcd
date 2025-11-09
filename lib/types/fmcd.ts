@@ -54,6 +54,8 @@ export interface Federation {
   };
   // Fields computed/assumed since not in API response
   status?: "active" | "inactive" | "syncing";
+  gateways?: Gateway[]; // Gateway information for this federation
+  gatewayCount?: number; // Cached gateway count
 }
 
 export interface FMCDBalance {
@@ -88,4 +90,31 @@ export interface OnchainAddressResponse {
   address: string;
   operationId?: string;
   federationId?: string;
+}
+
+export interface Gateway {
+  federation_id: string;
+  info: {
+    api: string;
+    fees: {
+      base_msat: number;
+      proportional_millionths: number;
+    };
+    gateway_id: string;
+    gateway_redeem_key: string;
+    lightning_alias: string;
+    mint_channel_id: number;
+    node_pub_key: string;
+    route_hints: any[];
+    supports_private_payments: boolean;
+  };
+  ttl: {
+    nanos: number;
+    secs: number;
+  };
+  vetted: boolean;
+}
+
+export interface GatewayResponse {
+  gateways?: Gateway[]; // The API returns an array directly, not wrapped in an object
 }

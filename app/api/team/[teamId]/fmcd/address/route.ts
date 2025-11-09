@@ -6,7 +6,8 @@ import { OnchainAddressRequest, OnchainAddressResponse } from "@/lib/types/fmcd"
 
 interface FMCDOnchainAddressResponse {
   address: string;
-  operationId?: string;
+  operationId: string;
+  tweakIdx: number;
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
@@ -55,13 +56,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ te
     );
 
     // Call the FMCD API to generate the onchain address
+    // Use the correct FMCD v0.8.0 endpoint based on source code analysis
     const response = await fmcdRequest<FMCDOnchainAddressResponse>({
-      endpoint: "/v2/onchain/address",
+      endpoint: "/v2/onchain/deposit-address",
       config,
       method: "POST",
       body: addressRequestBody,
       maxRetries: 3,
-      timeoutMs: 15000, // Moderate timeout for address generation
+      timeoutMs: 15000,
     });
 
     if (response.error) {

@@ -16,6 +16,7 @@ import {
   ExternalLink,
   ArrowRight,
   Plus,
+  Zap,
 } from "lucide-react";
 import { Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
@@ -116,6 +117,15 @@ export function FederationCard({ federation }: FederationCardProps) {
             <span className="text-sm text-muted-foreground">Balance</span>
           </div>
           <span className="font-semibold">{formatSats(federation.balance_msat)} sats</span>
+        </div>
+
+        {/* Gateway Count */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Zap className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Lightning Gateways</span>
+          </div>
+          <span className="font-medium">{federation.gatewayCount || 0}</span>
         </div>
 
         {/* Network Info */}

@@ -20,6 +20,10 @@ import {
   Globe,
   Info,
   Plus,
+  Zap,
+  Activity,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { FMCDInfo, Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
@@ -192,7 +196,7 @@ export default function FederationDetailsPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Balance Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -203,6 +207,20 @@ export default function FederationDetailsPage() {
             <div className="text-2xl font-bold">{formatSats(federation.balance_msat)} sats</div>
             <p className="text-xs text-muted-foreground">
               {(federation.balance_msat / 1000).toFixed(8)} BTC
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Gateway Count Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lightning Gateways</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{federation.gatewayCount || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {federation.gatewayCount === 1 ? "gateway" : "gateways"} available
             </p>
           </CardContent>
         </Card>
@@ -233,6 +251,125 @@ export default function FederationDetailsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Lightning Gateways Section */}
+      {federation.gateways && federation.gateways.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Zap className="h-5 w-5" />
+              <span>Lightning Gateways</span>
+            </CardTitle>
+            <CardDescription>
+              Lightning network gateways available for this federation
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {federation.gateways.map((gateway, index) => (
+                <Card key={gateway.info.gateway_id || index} className="border-dashed">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium">
+                        {gateway.info.lightning_alias || `Gateway ${index + 1}`}
+                      </CardTitle>
+                      <Badge variant={gateway.vetted ? "default" : "secondary"}>
+                        <Activity className="w-3 h-3 mr-1" />
+                        {gateway.vetted ? "Vetted" : "Unvetted"}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Gateway ID */}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">Gateway ID</div>
+                      <div className="text-xs font-mono bg-muted p-2 rounded break-all">
+                        {gateway.info.gateway_id}
+                      </div>
+                    </div>
+
+                    {/* Node Public Key */}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Node Public Key
+                      </div>
+                      <div className="text-xs font-mono bg-muted p-2 rounded break-all">
+                        {gateway.info.node_pub_key}
+                      </div>
+                    </div>
+
+                    {/* API URL */}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">API URL</div>
+                      <div className="text-xs break-all">
+                        <a
+                          href={gateway.info.api}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {gateway.info.api}
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Fees */}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">Fees</div>
+                      <div className="text-xs space-y-1">
+                        <div>Base: {gateway.info.fees.base_msat} msat</div>
+                        <div>
+                          Rate: {(gateway.info.fees.proportional_millionths / 10000).toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Channel Info */}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">Channel</div>
+                      <div className="text-xs">ID: {gateway.info.mint_channel_id}</div>
+                    </div>
+
+                    {/* Private Payments */}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground">Features</div>
+                      <div className="text-xs">
+                        {gateway.info.supports_private_payments
+                          ? "✓ Private Payments"
+                          : "✗ No Private Payments"}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Gateways Message */}
+      {(!federation.gateways || federation.gateways.length === 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Zap className="h-5 w-5" />
+              <span>Lightning Gateways</span>
+            </CardTitle>
+            <CardDescription>Lightning network gateways for this federation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-6">
+              <Zap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Lightning Gateways</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                This federation doesn&apos;t have any lightning gateways configured, or they
+                couldn&apos;t be loaded. Lightning gateways enable sending and receiving payments
+                via the Lightning Network.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Technical Details Section */}
       <Card>

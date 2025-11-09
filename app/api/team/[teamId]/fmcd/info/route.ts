@@ -1,8 +1,38 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
-import { FMCDInfo, Federation } from "@/lib/types/fmcd";
+import { FMCDInfo, Federation, Gateway, GatewayResponse } from "@/lib/types/fmcd";
 import { getTeamConfig, saveTeamStatus } from "@/lib/storage/team-storage";
 import { fmcdRequest, ensureArray, ensureNumber, ensureObject } from "@/lib/fmcd/utils";
+
+// Helper function to fetch gateways for a specific federation
+async function fetchFederationGateways(
+  federationId: string,
+  config: any
+): Promise<{ gateways: Gateway[]; count: number }> {
+  try {
+    const response = await fmcdRequest<Gateway[]>({
+      endpoint: "/v2/ln/gateways",
+      method: "POST",
+      body: { federationId },
+      config,
+      maxRetries: 2,
+      timeoutMs: 5000,
+    });
+
+    if (response.error || !response.data) {
+      console.warn(`Failed to fetch gateways for federation ${federationId}: ${response.error}`);
+      return { gateways: [], count: 0 };
+    }
+
+    // The API returns an array of gateways directly
+    const gateways = response.data || [];
+    console.log(`Fetched ${gateways.length} gateways for federation ${federationId}`);
+    return { gateways, count: gateways.length };
+  } catch (error) {
+    console.warn(`Error fetching gateways for federation ${federationId}:`, error);
+    return { gateways: [], count: 0 };
+  }
+}
 
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
@@ -82,14 +112,41 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       });
     }
 
+    // Fetch gateways for all federations in parallel
+    const gatewayPromises = cleanedFederations.map(async federation => {
+      const gatewayData = await fetchFederationGateways(federation.federation_id, config);
+      return {
+        federationId: federation.federation_id,
+        ...gatewayData,
+      };
+    });
+
+    // Wait for all gateway requests to complete
+    const gatewayResults = await Promise.all(gatewayPromises);
+
+    // Add gateway data to federations
+    const federationsWithGateways = cleanedFederations.map(federation => {
+      const gatewayData = gatewayResults.find(
+        result => result.federationId === federation.federation_id
+      );
+
+      return {
+        ...federation,
+        gateways: gatewayData?.gateways || [],
+        gatewayCount: gatewayData?.count || 0,
+      };
+    });
+
     // Build the cleaned response
     // Extract network from the first federation since it's not at root level
     const network =
-      cleanedFederations.length > 0 ? cleanedFederations[0].config.global.network : "unknown";
+      federationsWithGateways.length > 0
+        ? federationsWithGateways[0].config.global.network
+        : "unknown";
 
     const cleanedData: FMCDInfo = {
       network: network || "unknown",
-      federations: cleanedFederations,
+      federations: federationsWithGateways,
     };
 
     // Update successful connection status
@@ -101,7 +158,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     });
 
     console.log(
-      `[FMCD Info] Successfully fetched data - ${cleanedData.federations.length} federation(s)`
+      `[FMCD Info] Successfully fetched data - ${cleanedData.federations.length} federation(s), total gateways: ${federationsWithGateways.reduce((sum, fed) => sum + fed.gatewayCount!, 0)}`
     );
 
     return NextResponse.json(cleanedData);
