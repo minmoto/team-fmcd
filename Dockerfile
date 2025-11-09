@@ -61,16 +61,22 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built application using Next.js standalone output
 COPY --from=installer --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=installer --chown=nextjs:nodejs /public ./public
 
-# Create public directory if needed
-RUN mkdir -p public && chown nextjs:nodejs public
+# Runtime environment variables for Stack Auth
+ARG NEXT_PUBLIC_STACK_PROJECT_ID
+ARG NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
+ARG STACK_SECRET_SERVER_KEY
 
-USER nextjs
-
+ENV NEXT_PUBLIC_STACK_PROJECT_ID=$NEXT_PUBLIC_STACK_PROJECT_ID
+ENV NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=$NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
+ENV STACK_SECRET_SERVER_KEY=$STACK_SECRET_SERVER_KEY
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3030
+
+USER nextjs
 
 EXPOSE 3030
 
