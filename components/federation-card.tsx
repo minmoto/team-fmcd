@@ -83,21 +83,25 @@ export function FederationCard({ federation }: FederationCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-base font-medium leading-tight">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <CardTitle className="text-base font-medium leading-tight break-words">
             {federation.config.global.federation_name || "Unknown Federation"}
           </CardTitle>
-          <Badge variant={connectionStatus.variant} className="shrink-0">
+          <Badge variant={connectionStatus.variant} className="shrink-0 self-start">
             <StatusIcon className="w-3 h-3 mr-1" />
             {connectionStatus.label}
           </Badge>
         </div>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Shield className="w-4 h-4" />
-          <span className="font-mono text-xs">{shortenFederationId(federation.federation_id)}</span>
+        <div className="flex items-center justify-between sm:justify-start space-x-2 text-sm text-muted-foreground">
+          <div className="flex items-center space-x-2 min-w-0">
+            <Shield className="w-4 h-4 shrink-0" />
+            <span className="font-mono text-xs truncate">
+              {shortenFederationId(federation.federation_id)}
+            </span>
+          </div>
           <button
             onClick={() => copyToClipboard(federation.federation_id, federation.federation_id)}
-            className="p-1 rounded hover:bg-gray-100 transition-colors"
+            className="p-1 rounded hover:bg-gray-100 transition-colors shrink-0"
             title="Copy full Federation ID"
           >
             {copiedId === federation.federation_id ? (
@@ -112,17 +116,19 @@ export function FederationCard({ federation }: FederationCardProps) {
       <CardContent className="space-y-4">
         {/* Balance */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Coins className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center space-x-2 min-w-0">
+            <Coins className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className="text-sm text-muted-foreground">Balance</span>
           </div>
-          <span className="font-semibold">{formatSats(federation.balance_msat)} sats</span>
+          <span className="font-semibold text-sm sm:text-base break-all">
+            {formatSats(federation.balance_msat)} sats
+          </span>
         </div>
 
         {/* Gateway Count */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Zap className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center space-x-2 min-w-0">
+            <Zap className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className="text-sm text-muted-foreground">Lightning Gateways</span>
           </div>
           <span className="font-medium">{federation.gatewayCount || 0}</span>
@@ -131,25 +137,30 @@ export function FederationCard({ federation }: FederationCardProps) {
         {/* Network Info */}
         {federation.config.global.network && (
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center space-x-2 min-w-0">
+              <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="text-sm text-muted-foreground">Network</span>
             </div>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs shrink-0">
               {federation.config.global.network}
             </Badge>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2 mt-4">
-          <Button onClick={() => setIsDepositModalOpen(true)} className="flex-1" size="sm">
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          <Button
+            onClick={() => setIsDepositModalOpen(true)}
+            className="flex-1 w-full sm:w-auto"
+            size="sm"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Deposit
           </Button>
-          <Button variant="outline" className="flex-1" size="sm" asChild>
+          <Button variant="outline" className="flex-1 w-full sm:w-auto" size="sm" asChild>
             <Link href={`/dashboard/${params.teamId}/federations/${federation.federation_id}`}>
-              View Details
+              <span className="hidden sm:inline">View Details</span>
+              <span className="sm:hidden">Details</span>
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
