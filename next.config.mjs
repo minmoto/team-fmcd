@@ -1,12 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: "standalone",
   // Optimize images for production
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: "https",
+        hostname: "**",
       },
     ],
   },
@@ -18,7 +18,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // Configure environment variables that should be available on the client
   env: {
-    NEXT_PUBLIC_APP_NAME: 'FMCD Dashboard',
+    NEXT_PUBLIC_APP_NAME: "FMCD Dashboard",
   },
 };
 
