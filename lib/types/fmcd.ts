@@ -1,3 +1,8 @@
+export enum TransactionChannel {
+  Lightning = "lightning",
+  Bitcoin = "bitcoin",
+}
+
 export interface FMCDConfiguration {
   teamId: string;
   baseUrl: string;
