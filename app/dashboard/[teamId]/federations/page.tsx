@@ -100,17 +100,19 @@ export default function FederationsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" disabled>
+      <div className="flex-1 space-y-4 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Federations</h2>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button variant="outline" disabled className="w-full sm:w-auto">
               <ArrowRightLeft className="w-4 h-4 mr-2" />
-              Transfer Funds
+              <span className="hidden sm:inline">Transfer Funds</span>
+              <span className="sm:hidden">Transfer</span>
             </Button>
-            <Button disabled>
+            <Button disabled className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
-              Connect Federation
+              <span className="hidden sm:inline">Connect Federation</span>
+              <span className="sm:hidden">Connect</span>
             </Button>
           </div>
         </div>
@@ -119,7 +121,7 @@ export default function FederationsPage() {
             <Network className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-lg font-semibold">Federation Connections</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(3)].map((_, i) => (
               <Card key={i}>
                 <CardHeader className="pb-3">
@@ -143,17 +145,19 @@ export default function FederationsPage() {
 
   if (error) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" disabled>
+      <div className="flex-1 space-y-4 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Federations</h2>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button variant="outline" disabled className="w-full sm:w-auto">
               <ArrowRightLeft className="w-4 h-4 mr-2" />
-              Transfer Funds
+              <span className="hidden sm:inline">Transfer Funds</span>
+              <span className="sm:hidden">Transfer</span>
             </Button>
-            <Button disabled>
+            <Button disabled className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
-              Connect Federation
+              <span className="hidden sm:inline">Connect Federation</span>
+              <span className="sm:hidden">Connect</span>
             </Button>
           </div>
         </div>
@@ -182,19 +186,21 @@ export default function FederationsPage() {
 
   if (!info || !info.federations || info.federations.length === 0) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" disabled>
+      <div className="flex-1 space-y-4 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Federations</h2>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button variant="outline" disabled className="w-full sm:w-auto">
               <ArrowRightLeft className="w-4 h-4 mr-2" />
-              Transfer Funds
+              <span className="hidden sm:inline">Transfer Funds</span>
+              <span className="sm:hidden">Transfer</span>
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
-                  Connect Federation
+                  <span className="hidden sm:inline">Connect Federation</span>
+                  <span className="sm:hidden">Connect</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -237,23 +243,26 @@ export default function FederationsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
-        <div className="flex items-center space-x-2">
+    <div className="flex-1 space-y-4 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Federations</h2>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
           <Button
             variant="outline"
             onClick={() => setIsTransferDialogOpen(true)}
             disabled={!info?.federations || info.federations.length < 2}
+            className="w-full sm:w-auto"
           >
             <ArrowRightLeft className="w-4 h-4 mr-2" />
-            Transfer Funds
+            <span className="hidden sm:inline">Transfer Funds</span>
+            <span className="sm:hidden">Transfer</span>
           </Button>
           <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
-                Connect Federation
+                <span className="hidden sm:inline">Connect Federation</span>
+                <span className="sm:hidden">Connect</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -304,7 +313,7 @@ export default function FederationsPage() {
             </Badge>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {info.federations.map(federation => (
             <FederationCard key={federation.federation_id} federation={federation} />
           ))}
