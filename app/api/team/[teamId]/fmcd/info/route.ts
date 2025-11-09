@@ -34,6 +34,40 @@ async function fetchFederationGateways(
   }
 }
 
+// Helper function to fetch live balance for a specific federation
+async function fetchFederationBalance(
+  federationId: string,
+  config: any
+): Promise<number> {
+  try {
+    // Try the federation-specific balance endpoint first
+    const balanceResponse = await fmcdRequest<any>({
+      endpoint: "/v2/fedimint/balance",
+      method: "POST",
+      body: { federationId },
+      config,
+      maxRetries: 2,
+      timeoutMs: 5000,
+    });
+
+    if (balanceResponse.data && typeof balanceResponse.data === 'number') {
+      console.log(`Fetched live balance for federation ${federationId}: ${balanceResponse.data} msats`);
+      return balanceResponse.data;
+    }
+
+    if (balanceResponse.data && balanceResponse.data.balance_msat) {
+      console.log(`Fetched live balance for federation ${federationId}: ${balanceResponse.data.balance_msat} msats`);
+      return ensureNumber(balanceResponse.data.balance_msat, 0);
+    }
+
+    console.warn(`No balance data found for federation ${federationId}`);
+    return 0;
+  } catch (error) {
+    console.warn(`Error fetching live balance for federation ${federationId}:`, error);
+    return 0;
+  }
+}
+
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
     const params = await context.params;
@@ -112,28 +146,35 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       });
     }
 
-    // Fetch gateways for all federations in parallel
-    const gatewayPromises = cleanedFederations.map(async federation => {
-      const gatewayData = await fetchFederationGateways(federation.federation_id, config);
+    // Fetch gateways and live balances for all federations in parallel
+    const federationPromises = cleanedFederations.map(async federation => {
+      const [gatewayData, liveBalance] = await Promise.all([
+        fetchFederationGateways(federation.federation_id, config),
+        fetchFederationBalance(federation.federation_id, config)
+      ]);
+      
       return {
         federationId: federation.federation_id,
-        ...gatewayData,
+        gateways: gatewayData.gateways,
+        gatewayCount: gatewayData.count,
+        liveBalance: liveBalance,
       };
     });
 
-    // Wait for all gateway requests to complete
-    const gatewayResults = await Promise.all(gatewayPromises);
+    // Wait for all federation requests to complete
+    const federationResults = await Promise.all(federationPromises);
 
-    // Add gateway data to federations
+    // Add gateway data and live balances to federations
     const federationsWithGateways = cleanedFederations.map(federation => {
-      const gatewayData = gatewayResults.find(
+      const federationData = federationResults.find(
         result => result.federationId === federation.federation_id
       );
 
       return {
         ...federation,
-        gateways: gatewayData?.gateways || [],
-        gatewayCount: gatewayData?.count || 0,
+        balance_msat: federationData?.liveBalance || federation.balance_msat, // Use live balance if available
+        gateways: federationData?.gateways || [],
+        gatewayCount: federationData?.gatewayCount || 0,
       };
     });
 
