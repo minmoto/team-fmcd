@@ -66,11 +66,15 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION=latest
 
-# Set dummy build-time environment variables for Next.js build
-# These will be replaced at runtime by actual values
-ENV NEXT_PUBLIC_STACK_PROJECT_ID=build_placeholder
-ENV NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=build_placeholder
-ENV STACK_SECRET_SERVER_KEY=build_placeholder
+# Stack Auth environment variables must be provided at build time
+# Use build args to pass these values during docker build
+ARG NEXT_PUBLIC_STACK_PROJECT_ID
+ARG NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
+ARG STACK_SECRET_SERVER_KEY
+
+ENV NEXT_PUBLIC_STACK_PROJECT_ID=$NEXT_PUBLIC_STACK_PROJECT_ID
+ENV NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY=$NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
+ENV STACK_SECRET_SERVER_KEY=$STACK_SECRET_SERVER_KEY
 
 # Build the application
 RUN npm run build
