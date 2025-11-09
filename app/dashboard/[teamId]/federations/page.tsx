@@ -16,8 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { XCircle, AlertTriangle, Network, Plus } from "lucide-react";
+import { XCircle, AlertTriangle, Network, Plus, ArrowRightLeft } from "lucide-react";
 import { FMCDInfo } from "@/lib/types/fmcd";
+import { TransferFundsModal } from "@/components/transfer-funds-modal";
 
 export default function FederationsPage() {
   const params = useParams<{ teamId: string }>();
@@ -28,6 +29,7 @@ export default function FederationsPage() {
   const [inviteCode, setInviteCode] = useState("");
   const [connectLoading, setConnectLoading] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
 
   const loadFMCDInfo = useCallback(async () => {
     try {
@@ -102,7 +104,14 @@ export default function FederationsPage() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
           <div className="flex items-center space-x-2">
-            {/* Future: Add federation management actions here */}
+            <Button variant="outline" disabled>
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Transfer Funds
+            </Button>
+            <Button disabled>
+              <Plus className="w-4 h-4 mr-2" />
+              Connect Federation
+            </Button>
           </div>
         </div>
         <div className="space-y-4">
@@ -138,7 +147,14 @@ export default function FederationsPage() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
           <div className="flex items-center space-x-2">
-            {/* Future: Add federation management actions here */}
+            <Button variant="outline" disabled>
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Transfer Funds
+            </Button>
+            <Button disabled>
+              <Plus className="w-4 h-4 mr-2" />
+              Connect Federation
+            </Button>
           </div>
         </div>
         <div className="space-y-4">
@@ -170,7 +186,33 @@ export default function FederationsPage() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
           <div className="flex items-center space-x-2">
-            {/* Future: Add federation management actions here */}
+            <Button variant="outline" disabled>
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Transfer Funds
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Connect Federation
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Connect New Federation</DialogTitle>
+                  <DialogDescription>
+                    Enter the federation invite code to connect to a new federation.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <Input placeholder="Federation invite code" />
+                </div>
+                <DialogFooter>
+                  <Button variant="outline">Cancel</Button>
+                  <Button>Connect</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         <div className="space-y-4">
@@ -199,6 +241,14 @@ export default function FederationsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Federations</h2>
         <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsTransferDialogOpen(true)}
+            disabled={!info?.federations || info.federations.length < 2}
+          >
+            <ArrowRightLeft className="w-4 h-4 mr-2" />
+            Transfer Funds
+          </Button>
           <Dialog open={isConnectDialogOpen} onOpenChange={setIsConnectDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -260,6 +310,16 @@ export default function FederationsPage() {
           ))}
         </div>
       </div>
+
+      <TransferFundsModal
+        isOpen={isTransferDialogOpen}
+        onClose={() => setIsTransferDialogOpen(false)}
+        federations={info?.federations || []}
+        onTransferComplete={() => {
+          setIsTransferDialogOpen(false);
+          loadFMCDInfo(); // Refresh federation data after transfer
+        }}
+      />
     </div>
   );
 }
