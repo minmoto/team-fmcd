@@ -269,7 +269,10 @@ export default function FederationDetailsPage() {
 
         {/* Transaction History Tab */}
         <TabsContent value="transactions" className="mt-6">
-          <FederationTransactionHistory federationId={federation.federation_id} />
+          <FederationTransactionHistory
+            federationId={federation.federation_id}
+            network={federation.config.global.network}
+          />
         </TabsContent>
 
         {/* Technical Details Tab */}
