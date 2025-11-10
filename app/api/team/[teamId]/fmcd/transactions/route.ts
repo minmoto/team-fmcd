@@ -4,6 +4,53 @@ import { FMCDTransaction } from "@/lib/types/fmcd";
 import { getTeamConfig } from "@/lib/storage/team-storage";
 import { fmcdRequest, ensureNumber } from "@/lib/fmcd/utils";
 
+/**
+ * Extract amount from a Lightning invoice using BOLT11 format
+ * Based on the parsing logic from mini API service
+ * @param invoice - Lightning invoice string
+ * @returns Amount in millisatoshis
+ */
+function extractAmountFromInvoice(invoice: string): number {
+  try {
+    // Basic BOLT11 amount extraction
+    // Lightning invoices encode amount in the invoice string
+    // Format: ln[prefix][amount][unit][separator][data]
+    // Example: lntbs100u (100 micro-bitcoin = 100 * 100 sats = 10,000 sats)
+
+    // Support different Lightning invoice formats for different networks
+    // lnbc - Bitcoin mainnet, lntb - Bitcoin testnet, lntbs - Bitcoin signet, lnbcrt - Bitcoin regtest
+    const match = invoice.match(/ln(bc|tb|tbs|bcrt)(\d+)([munp]?)/);
+
+    if (!match) {
+      console.warn(`Could not extract amount from invoice: ${invoice.substring(0, 20)}...`);
+      return 0;
+    }
+
+    const amount = parseInt(match[2]);
+    const unit = match[3];
+
+    // Convert to millisatoshis based on unit
+    // Following the exact logic from mini service
+    switch (unit) {
+      case "m": // milli-bitcoin (mBTC) = 100,000 sats = 100,000,000 msats
+        return amount * 100000000;
+      case "u": // micro-bitcoin (μBTC) = 100 sats = 100,000 msats
+        return amount * 100000;
+      case "n": // nano-bitcoin (nBTC) = 0.1 sats = 100 msats
+        return Math.floor(amount * 100);
+      case "p": // pico-bitcoin (pBTC) = 0.0001 sats = 0.1 msats
+        return Math.floor(amount / 10); // Use integer division for precision
+      default:
+        // If no unit specified, assume base unit (bitcoin)
+        // 1 BTC = 100,000,000 sats = 100,000,000,000 msats
+        return amount * 100000000000;
+    }
+  } catch (error) {
+    console.error(`Failed to extract amount from invoice: ${error}`);
+    return 0;
+  }
+}
+
 // Helper function to fetch transactions for a specific federation
 async function fetchFederationTransactions(
   federationId: string,
@@ -46,35 +93,34 @@ async function fetchFederationTransactions(
           // Try to parse amount from Lightning invoice if available
           const invoice = op.operationMeta.variant.receive.invoice;
           if (invoice) {
-            // Extract amount from Lightning invoice using BOLT11 format
-            // Format: ln[bc/tb/bcrt][amount][multiplier]
-            const match = invoice.match(/ln(?:bc|tb|bcrt)(\d+)([munp]?)/);
-            if (match) {
-              const baseAmount = parseInt(match[1]);
-              const multiplier = match[2];
-
-              // Convert to millisatoshis based on BOLT11 specification
-              switch (multiplier) {
-                case "m": // milli-bitcoin (0.001 BTC)
-                  amountMsats = baseAmount * 100000000; // 1m = 100,000 sats = 100,000,000 msats
-                  break;
-                case "u": // micro-bitcoin (0.000001 BTC)
-                  amountMsats = baseAmount * 100000; // 1u = 100 sats = 100,000 msats
-                  break;
-                case "n": // nano-bitcoin (0.000000001 BTC)
-                  amountMsats = baseAmount * 100; // 1n = 0.1 sats = 100 msats
-                  break;
-                case "p": // pico-bitcoin (0.000000000001 BTC)
-                  amountMsats = baseAmount * 0.1; // 1p = 0.0001 sats = 0.1 msats
-                  break;
-                default: // no multiplier means entire amount is in sats
-                  amountMsats = baseAmount * 1000; // sats to msats
-                  break;
-              }
-            }
+            amountMsats = extractAmountFromInvoice(invoice);
           }
         } else if (op.operationMeta?.variant?.pay) {
           type = "lightning_send";
+          // Extract amount from the pay invoice
+          const invoice = op.operationMeta.variant.pay.invoice;
+          if (invoice) {
+            amountMsats = extractAmountFromInvoice(invoice);
+          }
+        } else if (op.operationMeta?.variant?.send) {
+          type = "lightning_send";
+          // Try variant.send if variant.pay doesn't exist
+          const invoice = op.operationMeta.variant.send?.invoice;
+          if (invoice) {
+            amountMsats = extractAmountFromInvoice(invoice);
+          }
+        }
+
+        // Fallback: Check for amount in operationMeta or outcome
+        if (amountMsats === 0) {
+          // Check if there's an amount_msat field in operationMeta
+          if (op.operationMeta?.amount_msat) {
+            amountMsats = ensureNumber(op.operationMeta.amount_msat);
+          }
+          // Or check in the outcome for completed transactions
+          else if (op.outcome?.amount_msat) {
+            amountMsats = ensureNumber(op.outcome.amount_msat);
+          }
         }
       } else if (op.operationKind === "wallet") {
         // Wallet operations (onchain)
@@ -88,6 +134,12 @@ async function fetchFederationTransactions(
         } else if (op.operationMeta?.variant?.withdraw) {
           type = "onchain_send";
           address = op.operationMeta.variant.withdraw.address;
+          // For withdraw, check amount_sat in operationMeta or variant
+          if (op.operationMeta?.amount_sat) {
+            amountMsats = ensureNumber(op.operationMeta.amount_sat) * 1000; // Convert sats to msats
+          } else if (op.operationMeta?.variant?.withdraw?.amount_sat) {
+            amountMsats = ensureNumber(op.operationMeta.variant.withdraw.amount_sat) * 1000;
+          }
         }
       }
 

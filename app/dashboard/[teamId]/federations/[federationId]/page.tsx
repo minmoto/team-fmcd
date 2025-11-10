@@ -77,6 +77,11 @@ export default function FederationDetailsPage() {
     return (msats / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 });
   };
 
+  const formatBtc = (msats: number) => {
+    const btc = msats / 100000000000; // Convert msats to BTC (1 BTC = 100,000,000 sats = 100,000,000,000 msats)
+    return btc.toFixed(8); // Show 8 decimal places for BTC precision
+  };
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -208,7 +213,7 @@ export default function FederationDetailsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatSats(federation.balance_msat)} sats</div>
             <p className="text-xs text-muted-foreground">
-              {(federation.balance_msat / 1000).toFixed(8)} BTC
+              {formatBtc(federation.balance_msat)} BTC
             </p>
           </CardContent>
         </Card>
