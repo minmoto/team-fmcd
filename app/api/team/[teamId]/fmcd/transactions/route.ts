@@ -122,6 +122,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     const params = await context.params;
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "5"), 50); // Max 50 transactions
+    const federationId = searchParams.get("federationId"); // Optional federation filter
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
 
     const user = await stackServerApp.getUser();
 
@@ -166,15 +168,27 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     }
 
     // Get federation IDs from the info response
-    const federationIds = Object.keys(infoResponse.data);
+    let federationIds = Object.keys(infoResponse.data);
+
+    // Filter to specific federation if requested
+    if (federationId) {
+      if (federationIds.includes(federationId)) {
+        federationIds = [federationId];
+      } else {
+        return NextResponse.json({ error: "Federation not found" }, { status: 404 });
+      }
+    }
 
     if (federationIds.length === 0) {
       return NextResponse.json([]);
     }
 
-    // Fetch transactions for all federations in parallel
-    const transactionPromises = federationIds.map(federationId =>
-      fetchFederationTransactions(federationId, config, limit)
+    // For federation-specific requests, fetch more transactions to support pagination
+    const fetchLimit = federationId ? Math.min(limit * 10, 200) : limit;
+
+    // Fetch transactions for federations in parallel
+    const transactionPromises = federationIds.map(fedId =>
+      fetchFederationTransactions(fedId, config, fetchLimit)
     );
 
     const federationTransactions = await Promise.all(transactionPromises);
@@ -182,16 +196,34 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     // Combine all transactions from all federations
     const allTransactions = federationTransactions.flat();
 
-    // Sort by timestamp (newest first) and take the requested limit
-    const sortedTransactions = allTransactions
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
-
-    console.log(
-      `[FMCD Transactions] Successfully fetched ${sortedTransactions.length} transactions from ${federationIds.length} federations`
+    // Sort by timestamp (newest first)
+    const sortedTransactions = allTransactions.sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
     );
 
-    return NextResponse.json(sortedTransactions);
+    // For federation-specific requests, implement pagination
+    if (federationId) {
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedTransactions = sortedTransactions.slice(startIndex, endIndex);
+
+      return NextResponse.json({
+        transactions: paginatedTransactions,
+        total: sortedTransactions.length,
+        page,
+        limit,
+        totalPages: Math.ceil(sortedTransactions.length / limit),
+      });
+    }
+
+    // For overview requests, just return the limited set
+    const limitedTransactions = sortedTransactions.slice(0, limit);
+
+    console.log(
+      `[FMCD Transactions] Successfully fetched ${limitedTransactions.length} transactions from ${federationIds.length} federations`
+    );
+
+    return NextResponse.json(limitedTransactions);
   } catch (error) {
     console.error("Error in FMCD transactions endpoint:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
