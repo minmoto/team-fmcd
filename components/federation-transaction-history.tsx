@@ -16,17 +16,23 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { FMCDTransaction } from "@/lib/types/fmcd";
 import { formatDistanceToNow } from "date-fns";
 
 interface FederationTransactionHistoryProps {
   federationId: string;
+  network?: string;
   className?: string;
 }
 
 export function FederationTransactionHistory({
   federationId,
+  network,
   className,
 }: FederationTransactionHistoryProps) {
   const params = useParams();
@@ -37,6 +43,8 @@ export function FederationTransactionHistory({
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalTransactions, setTotalTransactions] = useState(0);
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const itemsPerPage = 20;
 
   useEffect(() => {
@@ -159,6 +167,160 @@ export function FederationTransactionHistory({
     return transaction.description || "Transaction";
   };
 
+  const toggleTransactionExpansion = (transactionId: string) => {
+    setExpandedTransaction(prev => (prev === transactionId ? null : transactionId));
+  };
+
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+    }
+  };
+
+  const getAddressExplorerUrl = (address: string, networkType?: string) => {
+    // Only generate explorer links for onchain transactions with addresses
+    if (!networkType || !address) return null;
+
+    const isSignet = networkType.toLowerCase().includes("signet");
+    const baseUrl = isSignet ? "https://mutinynet.com" : "https://mempool.space";
+
+    return `${baseUrl}/address/${address}`;
+  };
+
+  const renderTransactionDetails = (transaction: FMCDTransaction) => {
+    if (expandedTransaction !== transaction.id) return null;
+
+    const truncateId = (id: string, length = 16) => {
+      return id.length > length ? `${id.slice(0, length)}...` : id;
+    };
+
+    return (
+      <div className="mt-3 px-4 py-3 bg-muted/20">
+        <div className="space-y-3 text-sm">
+          {/* Transaction Time */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span>Time</span>
+              <div className="text-xs text-muted-foreground">
+                {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
+              </div>
+            </div>
+            <div className="text-xs font-mono text-muted-foreground break-all">
+              {transaction.timestamp.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Amount (if pending) */}
+          {transaction.amount_msats === 0 && (
+            <div className="flex items-center justify-between">
+              <span>Amount</span>
+              <span className="text-muted-foreground">Pending</span>
+            </div>
+          )}
+
+          {/* Bitcoin Address for onchain transactions */}
+          {transaction.type.includes("onchain") && transaction.address && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span>Bitcoin Address</span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(transaction.address!, "address")}
+                    className="h-6 w-6 p-0"
+                  >
+                    {copiedField === "address" ? (
+                      <span className="text-green-600 text-xs">✓</span>
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                  {network && (
+                    <Button variant="ghost" size="sm" asChild className="h-6 w-6 p-0">
+                      <a
+                        href={getAddressExplorerUrl(transaction.address, network) || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs font-mono text-muted-foreground break-all">
+                <span className="block sm:hidden">{truncateId(transaction.address, 24)}</span>
+                <span className="hidden sm:block">{transaction.address}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Transaction ID */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span>Transaction ID</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(transaction.id || "", "id")}
+                className="h-6 w-6 p-0"
+              >
+                {copiedField === "id" ? (
+                  <span className="text-green-600 text-xs">✓</span>
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+            <div className="text-xs font-mono text-muted-foreground break-all">
+              <span className="block sm:hidden">{truncateId(transaction.id, 24)}</span>
+              <span className="hidden sm:block">{transaction.id}</span>
+            </div>
+          </div>
+
+          {/* Federation ID */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span>Federation ID</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(transaction.federation_id || "", "federation")}
+                className="h-6 w-6 p-0"
+              >
+                {copiedField === "federation" ? (
+                  <span className="text-green-600 text-xs">✓</span>
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+            <div className="text-xs font-mono text-muted-foreground break-all">
+              <span className="block sm:hidden">
+                {truncateId(transaction.federation_id || "", 24)}
+              </span>
+              <span className="hidden sm:block">{transaction.federation_id}</span>
+            </div>
+          </div>
+
+          {/* Description */}
+          {transaction.description && transaction.description !== transaction.type && (
+            <div className="flex items-center justify-between">
+              <span>Description</span>
+              <span className="text-muted-foreground">{transaction.description}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const totalPages = Math.ceil(totalTransactions / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalTransactions);
@@ -223,43 +385,59 @@ export function FederationTransactionHistory({
         ) : (
           <>
             <div className="space-y-3">
-              {transactions.map(transaction => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between space-x-3 p-3 rounded-lg border hover:bg-muted/50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">{getTransactionIcon(transaction.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate">
-                          {getTransactionDescription(transaction)}
-                        </p>
-                        {getStatusBadge(transaction.status)}
+              {transactions.map(transaction => {
+                const isExpanded = expandedTransaction === transaction.id;
+                return (
+                  <div key={transaction.id} className="border rounded-lg overflow-hidden">
+                    <div
+                      className="flex items-center justify-between space-x-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => toggleTransactionExpansion(transaction.id)}
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0">{getTransactionIcon(transaction.type)}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">
+                              {getTransactionDescription(transaction)}
+                            </p>
+                            {getStatusBadge(transaction.status)}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span title={transaction.id}>ID: {transaction.id.slice(0, 8)}...</span>
+                            <span>•</span>
+                            <span title={transaction.timestamp.toLocaleString()}>
+                              {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span title={transaction.id}>ID: {transaction.id.slice(0, 8)}...</span>
-                        <span>•</span>
-                        <span title={transaction.timestamp.toLocaleString()}>
-                          {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
-                        </span>
+                      <div className="flex items-center space-x-3">
+                        <div className="text-right">
+                          <p
+                            className={`text-sm font-medium ${transaction.amount_msats === 0 ? "text-muted-foreground" : getTransactionColor(transaction.type)}`}
+                          >
+                            {transaction.amount_msats === 0
+                              ? ""
+                              : transaction.type.includes("receive") ||
+                                  transaction.type === "ecash_mint"
+                                ? "+"
+                                : "-"}
+                            {formatAmount(Math.abs(transaction.amount_msats))}
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
                     </div>
+                    {renderTransactionDetails(transaction)}
                   </div>
-                  <div className="flex-shrink-0 text-right">
-                    <p
-                      className={`text-sm font-medium ${transaction.amount_msats === 0 ? "text-muted-foreground" : getTransactionColor(transaction.type)}`}
-                    >
-                      {transaction.amount_msats === 0
-                        ? ""
-                        : transaction.type.includes("receive") || transaction.type === "ecash_mint"
-                          ? "+"
-                          : "-"}
-                      {formatAmount(Math.abs(transaction.amount_msats))}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination */}

@@ -84,6 +84,7 @@ export interface FMCDTransaction {
   status: "pending" | "completed" | "failed";
   federation_id?: string;
   description?: string;
+  address?: string; // Bitcoin address for onchain transactions
 }
 
 export interface OnchainAddressRequest {
