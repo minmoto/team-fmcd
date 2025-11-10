@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
-import { FederationStatsSummary } from "@/components/federation-stats-summary";
+// import { FederationStatsSummary } from "@/components/federation-stats-summary";
 import { AmountDisplayInline } from "@/components/amount-display";
 
 interface FederationCardProps {
@@ -31,10 +31,6 @@ export function FederationCard({ federation }: FederationCardProps) {
   const params = useParams<{ teamId: string }>();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
-
-  const formatSats = (msats: number) => {
-    return (msats / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  };
 
   const shortenFederationId = (id: string) => {
     if (!id) return "unknown";
@@ -112,6 +108,15 @@ export function FederationCard({ federation }: FederationCardProps) {
               <Copy className="w-3 h-3" />
             )}
           </button>
+          <a
+            href={`https://observer.fedimint.org/federations/${federation.federation_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 rounded hover:bg-gray-100 transition-colors shrink-0"
+            title="View in Fedimint Observer"
+          >
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </CardHeader>
 
@@ -150,10 +155,10 @@ export function FederationCard({ federation }: FederationCardProps) {
         )}
 
         {/* Transaction Stats Summary */}
-        <FederationStatsSummary
+        {/* <FederationStatsSummary
           federationId={federation.federation_id}
           federationName={federation.config.global.federation_name}
-        />
+        /> */}
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
