@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, ArrowUpRight, ArrowDownLeft, Zap, Bitcoin, Ticket } from "lucide-react";
 import { FMCDTransaction } from "@/lib/types/fmcd";
 import { formatDistanceToNow } from "date-fns";
+import { AmountDisplayInline } from "@/components/amount-display";
 
 interface RecentTransactionsProps {
   className?: string;
@@ -56,13 +57,6 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
     fetchTransactions();
   }, [teamId]);
 
-  const formatAmount = (amountMsats: number) => {
-    if (amountMsats === 0) {
-      return "-";
-    }
-    const sats = Math.floor(amountMsats / 1000);
-    return sats.toLocaleString() + " sats";
-  };
 
   const getTransactionIcon = (type: FMCDTransaction["type"]) => {
     switch (type) {
@@ -210,16 +204,17 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
                   </div>
                 </div>
                 <div className="flex-shrink-0 text-right">
-                  <p
-                    className={`text-sm font-medium ${transaction.amount_msats === 0 ? "text-muted-foreground" : getTransactionColor(transaction.type)}`}
-                  >
-                    {transaction.amount_msats === 0
-                      ? ""
-                      : transaction.type.includes("receive") || transaction.type === "ecash_mint"
-                        ? "+"
-                        : "-"}
-                    {formatAmount(Math.abs(transaction.amount_msats))}
-                  </p>
+                  {transaction.amount_msats === 0 ? (
+                    <p className="text-sm font-medium text-muted-foreground">-</p>
+                  ) : (
+                    <div className={`text-sm font-medium ${getTransactionColor(transaction.type)}`}>
+                      {transaction.type.includes("receive") || transaction.type === "ecash_mint" ? "+" : "-"}
+                      <AmountDisplayInline 
+                        msats={Math.abs(transaction.amount_msats)} 
+                        className="inline" 
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

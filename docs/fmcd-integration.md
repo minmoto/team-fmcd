@@ -45,9 +45,9 @@ The existing dashboard layout includes a "Configuration" page in the sidebar. Th
 ### Configuration Page Layout
 
 ```
-┌─ Team Configuration ──────────────────────────────────┐
+┌─ Configuration ───────────────────────────────────────┐
 │                                                       │
-│  📡 FMCD Instance Configuration                       │
+│  📡 FMCD Connection                                   │
 │  ┌─────────────────────────────────────────────────┐  │
 │  │ Status: ● Connected / ● Disconnected / ● Error  │  │
 │  │ Last checked: 2 minutes ago                     │  │
@@ -58,7 +58,7 @@ The existing dashboard layout includes a "Configuration" page in the sidebar. Th
 │  │ FMCD Base URL: [http://localhost:3333       ]   │  │
 │  │ Password:      [••••••••••••••••••••••••••••]   │  │
 │  │                                                 │  │
-│  │ [ Test Connection ]  [ Save Configuration ]     │  │
+│  │ [ Test Connection ]  [ Save Connection ]        │  │
 │  └─────────────────────────────────────────────────┘  │
 │                                                       │
 │  [Non-Admin View]                                     │
