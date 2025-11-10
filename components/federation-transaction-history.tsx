@@ -422,7 +422,9 @@ export function FederationTransactionHistory({
                 <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Net Change</p>
+                <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">
+                  Net Change
+                </p>
                 <p
                   className={`text-sm sm:text-lg font-bold ${
                     totalDeposits - totalWithdrawals >= 0
@@ -431,7 +433,10 @@ export function FederationTransactionHistory({
                   }`}
                 >
                   {totalDeposits - totalWithdrawals >= 0 ? "+" : ""}
-                  <AmountDisplayInline msats={Math.abs(totalDeposits - totalWithdrawals)} amountOnly />
+                  <AmountDisplayInline
+                    msats={Math.abs(totalDeposits - totalWithdrawals)}
+                    amountOnly
+                  />
                 </p>
               </div>
             </div>
@@ -472,7 +477,9 @@ export function FederationTransactionHistory({
                       onClick={() => toggleTransactionExpansion(transaction.id)}
                     >
                       <div className="flex items-start sm:items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 mt-0.5 sm:mt-0">{getTransactionIcon(transaction.type)}</div>
+                        <div className="flex-shrink-0 mt-0.5 sm:mt-0">
+                          {getTransactionIcon(transaction.type)}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                             <p className="text-sm font-medium truncate">
@@ -485,7 +492,10 @@ export function FederationTransactionHistory({
                               ID: {transaction.id.slice(0, 8)}...
                             </span>
                             <span className="hidden sm:inline">•</span>
-                            <span title={transaction.timestamp.toLocaleString()} className="truncate">
+                            <span
+                              title={transaction.timestamp.toLocaleString()}
+                              className="truncate"
+                            >
                               {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
                             </span>
                           </div>
@@ -504,7 +514,10 @@ export function FederationTransactionHistory({
                                 transaction.type === "ecash_mint"
                                   ? "+"
                                   : "-"}
-                                <AmountDisplayInline msats={Math.abs(transaction.amount_msats)} amountOnly />
+                                <AmountDisplayInline
+                                  msats={Math.abs(transaction.amount_msats)}
+                                  amountOnly
+                                />
                               </>
                             )}
                           </p>

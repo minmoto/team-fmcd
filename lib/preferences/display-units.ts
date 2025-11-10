@@ -41,7 +41,6 @@ export async function updateDisplayUnit(unit: DisplayUnit): Promise<void> {
   }
 }
 
-
 /**
  * Format amount in millisatoshis according to specified unit
  * Note: This function requires the unit to be passed explicitly
@@ -69,6 +68,6 @@ export function getDisplayUnitLabel(unit: DisplayUnit): string {
 export function formatAmountWithUnit(msats: number, unit: DisplayUnit): string {
   const amount = formatAmount(msats, unit);
   const label = getDisplayUnitLabel(unit);
-  
+
   return `${amount} ${label}`;
 }

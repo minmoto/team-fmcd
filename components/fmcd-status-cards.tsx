@@ -50,7 +50,6 @@ export function FMCDStatusCards() {
     }
   }, [params.teamId, loadFMCDData]);
 
-
   if (loading) {
     return (
       <div className="flex flex-col lg:flex-row gap-6">

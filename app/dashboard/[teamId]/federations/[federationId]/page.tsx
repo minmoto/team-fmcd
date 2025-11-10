@@ -74,7 +74,6 @@ export default function FederationDetailsPage() {
     }
   }, [params.teamId, params.federationId]);
 
-
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -155,7 +154,9 @@ export default function FederationDetailsPage() {
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Federation Details</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+            Federation Details
+          </h2>
         </div>
         <Card>
           <CardContent className="p-4 sm:p-6">
@@ -190,8 +191,12 @@ export default function FederationDetailsPage() {
             </Link>
           </Button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">{federationName}</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">Federation details and information</p>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">
+              {federationName}
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Federation details and information
+            </p>
           </div>
         </div>
         <div className="flex items-center justify-center sm:justify-end">
@@ -305,7 +310,10 @@ export default function FederationDetailsPage() {
                           <CardTitle className="text-sm font-medium truncate">
                             {gateway.info.lightning_alias || `Gateway ${index + 1}`}
                           </CardTitle>
-                          <Badge variant={gateway.vetted ? "default" : "secondary"} className="self-start sm:self-center">
+                          <Badge
+                            variant={gateway.vetted ? "default" : "secondary"}
+                            className="self-start sm:self-center"
+                          >
                             <Activity className="w-3 h-3 mr-1" />
                             {gateway.vetted ? "Vetted" : "Unvetted"}
                           </Badge>
@@ -318,7 +326,9 @@ export default function FederationDetailsPage() {
                             Gateway ID
                           </div>
                           <div className="text-xs font-mono bg-muted p-2 rounded break-all">
-                            <span className="block sm:hidden">{gateway.info.gateway_id.slice(0, 32)}...</span>
+                            <span className="block sm:hidden">
+                              {gateway.info.gateway_id.slice(0, 32)}...
+                            </span>
                             <span className="hidden sm:block">{gateway.info.gateway_id}</span>
                           </div>
                         </div>
@@ -329,7 +339,9 @@ export default function FederationDetailsPage() {
                             Node Public Key
                           </div>
                           <div className="text-xs font-mono bg-muted p-2 rounded break-all">
-                            <span className="block sm:hidden">{gateway.info.node_pub_key.slice(0, 32)}...</span>
+                            <span className="block sm:hidden">
+                              {gateway.info.node_pub_key.slice(0, 32)}...
+                            </span>
                             <span className="hidden sm:block">{gateway.info.node_pub_key}</span>
                           </div>
                         </div>
@@ -344,7 +356,11 @@ export default function FederationDetailsPage() {
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline"
                             >
-                              <span className="block sm:hidden">{gateway.info.api.length > 40 ? `${gateway.info.api.slice(0, 40)}...` : gateway.info.api}</span>
+                              <span className="block sm:hidden">
+                                {gateway.info.api.length > 40
+                                  ? `${gateway.info.api.slice(0, 40)}...`
+                                  : gateway.info.api}
+                              </span>
                               <span className="hidden sm:block">{gateway.info.api}</span>
                             </a>
                           </div>
@@ -372,7 +388,9 @@ export default function FederationDetailsPage() {
                           <div className="text-xs font-medium text-muted-foreground">Channel</div>
                           <div className="text-xs flex justify-between sm:block">
                             <span>ID:</span>
-                            <span className="font-mono break-all">{gateway.info.mint_channel_id}</span>
+                            <span className="font-mono break-all">
+                              {gateway.info.mint_channel_id}
+                            </span>
                           </div>
                         </div>
 
@@ -380,7 +398,9 @@ export default function FederationDetailsPage() {
                         <div className="space-y-1">
                           <div className="text-xs font-medium text-muted-foreground">Features</div>
                           <div className="text-xs">
-                            <span className={`inline-flex items-center ${gateway.info.supports_private_payments ? 'text-green-600' : 'text-red-600'}`}>
+                            <span
+                              className={`inline-flex items-center ${gateway.info.supports_private_payments ? "text-green-600" : "text-red-600"}`}
+                            >
                               {gateway.info.supports_private_payments ? "✓" : "✗"}
                               <span className="ml-1">Private Payments</span>
                             </span>
@@ -456,7 +476,9 @@ export default function FederationDetailsPage() {
                 </div>
                 <div className="p-3 bg-muted rounded-md">
                   <code className="text-xs break-all font-mono">
-                    <span className="block sm:hidden">{federation.federation_id.slice(0, 32)}...</span>
+                    <span className="block sm:hidden">
+                      {federation.federation_id.slice(0, 32)}...
+                    </span>
                     <span className="hidden sm:block">{federation.federation_id}</span>
                   </code>
                 </div>
@@ -500,7 +522,11 @@ export default function FederationDetailsPage() {
                       className="text-sm text-primary hover:underline flex items-center space-x-1 break-all"
                     >
                       <span className="break-all">
-                        <span className="block sm:hidden">{metaExternalUrl.length > 40 ? `${metaExternalUrl.slice(0, 40)}...` : metaExternalUrl}</span>
+                        <span className="block sm:hidden">
+                          {metaExternalUrl.length > 40
+                            ? `${metaExternalUrl.slice(0, 40)}...`
+                            : metaExternalUrl}
+                        </span>
                         <span className="hidden sm:block">{metaExternalUrl}</span>
                       </span>
                       <ExternalLink className="h-3 w-3 flex-shrink-0" />

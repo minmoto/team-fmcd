@@ -1,7 +1,12 @@
 "use client";
 
 import { useDisplayUnits } from "@/hooks/use-display-units";
-import { formatAmount, formatAmountWithUnit, getDisplayUnitLabel, DisplayUnit } from "@/lib/preferences/display-units";
+import {
+  formatAmount,
+  formatAmountWithUnit,
+  getDisplayUnitLabel,
+  DisplayUnit,
+} from "@/lib/preferences/display-units";
 
 interface AmountDisplayProps {
   /** Amount in millisatoshis */
@@ -20,7 +25,7 @@ interface AmountDisplayProps {
 
 /**
  * AmountDisplay - A reusable component for displaying Bitcoin amounts
- * 
+ *
  * Features:
  * - Respects user's display unit preference (SATS or BTC)
  * - Shows secondary unit when showSecondary is true
@@ -46,21 +51,18 @@ export function AmountDisplay({
     return (
       <div>
         <span className={className}>
-          {amountOnly 
+          {amountOnly
             ? formatAmount(msats, DisplayUnit.SATS)
-            : formatAmountWithUnit(msats, DisplayUnit.SATS)
-          }
+            : formatAmountWithUnit(msats, DisplayUnit.SATS)}
         </span>
         {showSecondary && (
-          <div className={secondaryClassName}>
-            {formatAmount(msats, DisplayUnit.BTC)} BTC
-          </div>
+          <div className={secondaryClassName}>{formatAmount(msats, DisplayUnit.BTC)} BTC</div>
         )}
       </div>
     );
   }
 
-  const primaryAmount = amountOnly 
+  const primaryAmount = amountOnly
     ? formatAmount(msats, effectiveUnit)
     : formatAmountWithUnit(msats, effectiveUnit);
 
@@ -88,7 +90,7 @@ export function AmountDisplayInline({
   className = "",
   forceUnit,
   amountOnly = false,
-}: Pick<AmountDisplayProps, 'msats' | 'className' | 'forceUnit' | 'amountOnly'>) {
+}: Pick<AmountDisplayProps, "msats" | "className" | "forceUnit" | "amountOnly">) {
   return (
     <AmountDisplay
       msats={msats}
