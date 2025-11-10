@@ -31,6 +31,13 @@ type Item = {
   href: string;
   icon: LucideIcon;
   type: "item";
+  subItems?: SubItem[];
+};
+
+type SubItem = {
+  name: React.ReactNode;
+  href: string;
+  icon?: LucideIcon;
 };
 
 type Sep = {
@@ -44,7 +51,7 @@ type Label = {
 
 export type SidebarItem = Item | Sep | Label;
 
-function NavItem(props: { item: Item; onClick?: () => void; basePath: string }) {
+function SubNavItem(props: { item: SubItem; onClick?: () => void; basePath: string }) {
   const segment = useSegment(props.basePath);
   const selected = segment === props.item.href;
 
@@ -54,14 +61,47 @@ function NavItem(props: { item: Item; onClick?: () => void; basePath: string }) 
       className={cn(
         buttonVariants({ variant: "ghost", size: "sm" }),
         selected && "bg-muted",
-        "flex-grow justify-start text-md text-zinc-800 dark:text-zinc-300 px-2"
+        "flex-grow justify-start text-sm text-zinc-600 dark:text-zinc-400 px-6"
       )}
       onClick={props.onClick}
       prefetch={true}
     >
-      <props.item.icon className="mr-2 h-5 w-5" />
+      {props.item.icon && <props.item.icon className="mr-2 h-4 w-4" />}
       {props.item.name}
     </Link>
+  );
+}
+
+function NavItem(props: { item: Item; onClick?: () => void; basePath: string }) {
+  const segment = useSegment(props.basePath);
+  const selected = segment === props.item.href;
+  const hasSubItemSelected = props.item.subItems?.some(subItem => segment === subItem.href);
+
+  return (
+    <div className="w-full">
+      <Link
+        href={props.basePath + props.item.href}
+        className={cn(
+          buttonVariants({ variant: "ghost", size: "sm" }),
+          (selected || hasSubItemSelected) && "bg-muted",
+          "flex-grow justify-start text-md text-zinc-800 dark:text-zinc-300 px-2 w-full"
+        )}
+        onClick={props.onClick}
+        prefetch={true}
+      >
+        <props.item.icon className="mr-2 h-5 w-5" />
+        {props.item.name}
+      </Link>
+      {props.item.subItems && props.item.subItems.length > 0 && (
+        <div className="mt-1 space-y-1">
+          {props.item.subItems.map((subItem, index) => (
+            <div key={index} className="flex">
+              <SubNavItem item={subItem} onClick={props.onClick} basePath={props.basePath} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -85,7 +125,7 @@ function SidebarContent(props: {
             return <Separator key={index} className="my-2" />;
           } else if (item.type === "item") {
             return (
-              <div key={index} className="flex px-2">
+              <div key={index} className="px-2">
                 <NavItem item={item} onClick={props.onNavigate} basePath={props.basePath} />
               </div>
             );
