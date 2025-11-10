@@ -516,6 +516,32 @@ export default function FederationDetailsPage() {
                 </Badge>
               </div>
 
+              <Separator />
+
+              {/* Fedimint Observer Link */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center space-x-2">
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  <span>Fedimint Observer</span>
+                </label>
+                <a
+                  href={`https://observer.fedimint.org/federations/${federation.federation_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center space-x-1 break-all"
+                >
+                  <span className="break-all">
+                    <span className="block sm:hidden">
+                      observer.fedimint.org/federations/{federation.federation_id.slice(0, 8)}...
+                    </span>
+                    <span className="hidden sm:block">
+                      observer.fedimint.org/federations/{federation.federation_id}
+                    </span>
+                  </span>
+                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                </a>
+              </div>
+
               {/* External URL if available */}
               {metaExternalUrl && (
                 <>
