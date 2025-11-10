@@ -29,6 +29,7 @@ import {
 import { FMCDInfo, Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
 import { FederationTransactionHistory } from "@/components/federation-transaction-history";
+import { TransactionStatsDashboard } from "@/components/transaction-stats-dashboard";
 import { AmountDisplay } from "@/components/amount-display";
 
 export default function FederationDetailsPage() {
@@ -267,8 +268,12 @@ export default function FederationDetailsPage() {
       </div>
 
       {/* Tabbed Content */}
-      <Tabs defaultValue="transactions" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="statistics" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="statistics" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Statistics
+          </TabsTrigger>
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Transaction History
@@ -278,6 +283,11 @@ export default function FederationDetailsPage() {
             Technical Details
           </TabsTrigger>
         </TabsList>
+
+        {/* Statistics Tab */}
+        <TabsContent value="statistics" className="mt-6">
+          <TransactionStatsDashboard federationId={federation.federation_id} />
+        </TabsContent>
 
         {/* Transaction History Tab */}
         <TabsContent value="transactions" className="mt-6">
