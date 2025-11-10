@@ -36,6 +36,7 @@ async function fetchFederationTransactions(
       let amountMsats = 0;
       let type: FMCDTransaction["type"] = "ecash_mint";
       let status: FMCDTransaction["status"] = "pending";
+      let address: string | undefined;
 
       // Determine transaction type and amount
       if (op.operationKind === "ln") {
@@ -79,12 +80,14 @@ async function fetchFederationTransactions(
         // Wallet operations (onchain)
         if (op.operationMeta?.variant?.deposit) {
           type = "onchain_receive";
+          address = op.operationMeta.variant.deposit.address;
           // For completed wallet deposits, amount is in outcome.Claimed.btc_deposited (satoshis)
           if (op.outcome?.Claimed?.btc_deposited) {
             amountMsats = op.outcome.Claimed.btc_deposited * 1000; // Convert sats to msats
           }
         } else if (op.operationMeta?.variant?.withdraw) {
           type = "onchain_send";
+          address = op.operationMeta.variant.withdraw.address;
         }
       }
 
@@ -107,6 +110,7 @@ async function fetchFederationTransactions(
         status,
         federation_id: federationId,
         description: op.operationMeta?.description || op.operationKind || "Transaction",
+        address, // Add address for onchain transactions
       } as FMCDTransaction;
 
       return transaction;
