@@ -141,7 +141,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       return {
         ...federation,
         gateways: gatewayData?.gateways || [],
-        gatewayCount: gatewayData?.count || 0,
+        gatewayCount: gatewayData?.gatewayCount || 0,
       };
     });
 

@@ -20,7 +20,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_NAME: "FMCD Dashboard",
   },
-  outputFileTracingRoot: "."
+  outputFileTracingRoot: ".",
 };
 
 export default nextConfig;
