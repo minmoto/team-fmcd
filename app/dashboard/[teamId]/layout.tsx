@@ -7,12 +7,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FMCDInfo } from "@/lib/types/fmcd";
 
-function useNavigationItems(teamId: string): SidebarItem[] {
+function useNavigationItems(teamId: string): { items: SidebarItem[]; isLoading: boolean } {
   const [fmcdInfo, setFmcdInfo] = useState<FMCDInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchFederations() {
       try {
+        setIsLoading(true);
         const response = await fetch(`/api/team/${teamId}/fmcd/info`);
         if (response.ok) {
           const data = await response.json();
@@ -21,11 +23,15 @@ function useNavigationItems(teamId: string): SidebarItem[] {
       } catch (error) {
         // Silently handle error - federations will just not appear in nav
         console.warn("Failed to fetch federations for navigation:", error);
+      } finally {
+        setIsLoading(false);
       }
     }
 
     if (teamId) {
       fetchFederations();
+    } else {
+      setIsLoading(false);
     }
   }, [teamId]);
 
@@ -37,35 +43,38 @@ function useNavigationItems(teamId: string): SidebarItem[] {
       icon: Network,
     })) || [];
 
-  return [
-    {
-      name: "Overview",
-      href: "/",
-      icon: Globe,
-      type: "item",
-    },
-    {
-      type: "label",
-      name: "Management",
-    },
-    {
-      name: "Federations",
-      href: "/federations",
-      icon: Users,
-      type: "item",
-      subItems: federationSubItems,
-    },
-    {
-      type: "label",
-      name: "Settings",
-    },
-    {
-      name: "Configuration",
-      href: "/configuration",
-      icon: Settings2,
-      type: "item",
-    },
-  ];
+  return {
+    items: [
+      {
+        name: "Overview",
+        href: "/",
+        icon: Globe,
+        type: "item",
+      },
+      {
+        type: "label",
+        name: "Management",
+      },
+      {
+        name: "Federations",
+        href: "/federations",
+        icon: Users,
+        type: "item",
+        subItems: federationSubItems,
+      },
+      {
+        type: "label",
+        name: "Settings",
+      },
+      {
+        name: "Configuration",
+        href: "/configuration",
+        icon: Settings2,
+        type: "item",
+      },
+    ],
+    isLoading,
+  };
 }
 
 export default function Layout(props: { children: React.ReactNode }) {
@@ -73,7 +82,7 @@ export default function Layout(props: { children: React.ReactNode }) {
   const user = useUser({ or: "redirect" });
   const team = user.useTeam(params.teamId);
   const router = useRouter();
-  const navigationItems = useNavigationItems(params.teamId);
+  const { items: navigationItems, isLoading } = useNavigationItems(params.teamId);
 
   if (!team) {
     router.push("/dashboard");
@@ -84,6 +93,7 @@ export default function Layout(props: { children: React.ReactNode }) {
     <SidebarLayout
       items={navigationItems}
       basePath={`/dashboard/${team.id}`}
+      isLoading={isLoading}
       sidebarTop={
         <SelectedTeamSwitcher selectedTeam={team} urlMap={team => `/dashboard/${team.id}`} />
       }

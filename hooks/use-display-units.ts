@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  DisplayUnit, 
-  fetchDisplayUnit, 
-  updateDisplayUnit
-} from "@/lib/preferences/display-units";
+import { DisplayUnit, fetchDisplayUnit, updateDisplayUnit } from "@/lib/preferences/display-units";
 
 /**
  * React hook for managing display units preferences
@@ -38,12 +34,12 @@ export function useDisplayUnits() {
   // Save preference via API
   const saveDisplayUnit = async (unit: DisplayUnit) => {
     if (isUpdating) return; // Prevent concurrent updates
-    
+
     setIsUpdating(true);
-    try {      
+    try {
       // Update via API
       await updateDisplayUnit(unit);
-      
+
       // Update local state only after successful API call
       setDisplayUnitState(unit);
     } catch (error) {
