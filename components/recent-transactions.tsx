@@ -57,7 +57,6 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
     fetchTransactions();
   }, [teamId]);
 
-
   const getTransactionIcon = (type: FMCDTransaction["type"]) => {
     switch (type) {
       case "lightning_receive":
@@ -208,10 +207,12 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
                     <p className="text-sm font-medium text-muted-foreground">-</p>
                   ) : (
                     <div className={`text-sm font-medium ${getTransactionColor(transaction.type)}`}>
-                      {transaction.type.includes("receive") || transaction.type === "ecash_mint" ? "+" : "-"}
-                      <AmountDisplayInline 
-                        msats={Math.abs(transaction.amount_msats)} 
-                        className="inline" 
+                      {transaction.type.includes("receive") || transaction.type === "ecash_mint"
+                        ? "+"
+                        : "-"}
+                      <AmountDisplayInline
+                        msats={Math.abs(transaction.amount_msats)}
+                        className="inline"
                       />
                     </div>
                   )}

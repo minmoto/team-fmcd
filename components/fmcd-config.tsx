@@ -164,9 +164,64 @@ export function FMCDConfigComponent() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin mr-2" />
-        Loading configuration...
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-8 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+                  <div className="h-6 w-64 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+                </div>
+                <div className="h-4 w-96 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+              </div>
+              <div className="flex-shrink-0">
+                <div className="h-6 w-24 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded-full"></div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Status section shimmer */}
+            <div className="p-3 bg-muted rounded-lg space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-12 bg-gradient-to-r from-muted-foreground/20 via-muted-foreground/10 to-muted-foreground/20 bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+                  <div className="h-5 w-20 bg-gradient-to-r from-muted-foreground/20 via-muted-foreground/10 to-muted-foreground/20 bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded-full"></div>
+                </div>
+                <div className="h-3 w-32 bg-gradient-to-r from-muted-foreground/20 via-muted-foreground/10 to-muted-foreground/20 bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+              </div>
+              <div className="h-3 w-24 bg-gradient-to-r from-muted-foreground/20 via-muted-foreground/10 to-muted-foreground/20 bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Base URL field shimmer */}
+              <div className="space-y-2">
+                <div className="h-4 w-28 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+                <div className="h-10 w-full bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded border"></div>
+                <div className="h-3 w-80 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+              </div>
+
+              {/* Password field shimmer */}
+              <div className="space-y-2">
+                <div className="h-4 w-16 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+                <div className="h-10 w-full bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded border"></div>
+                <div className="h-3 w-72 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+              </div>
+
+              {/* Checkbox shimmer */}
+              <div className="flex items-center space-x-2">
+                <div className="h-4 w-4 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded border"></div>
+                <div className="h-4 w-40 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+              </div>
+            </div>
+
+            {/* Buttons shimmer */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
+              <div className="h-10 w-full sm:w-32 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded border"></div>
+              <div className="h-10 w-full sm:w-36 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -219,9 +274,7 @@ export function FMCDConfigComponent() {
                 instance.
               </CardDescription>
             </div>
-            <div className="flex-shrink-0">
-              {getStatusBadge()}
-            </div>
+            <div className="flex-shrink-0">{getStatusBadge()}</div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

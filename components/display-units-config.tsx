@@ -28,7 +28,7 @@ export function DisplayUnitsConfig() {
 
   const handleSave = async () => {
     if (draftDisplayUnit === displayUnit) return; // No changes to save
-    
+
     setIsSaving(true);
     try {
       await setDisplayUnit(draftDisplayUnit);
@@ -71,7 +71,7 @@ export function DisplayUnitsConfig() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3 p-3 rounded-lg border bg-card">
                 <div className="h-4 w-4 bg-muted rounded-full"></div>
                 <div className="flex items-center space-x-3">
@@ -85,7 +85,7 @@ export function DisplayUnitsConfig() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex-shrink-0">
               <div className="h-10 w-32 bg-muted rounded animate-pulse"></div>
             </div>
@@ -110,9 +110,9 @@ export function DisplayUnitsConfig() {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <RadioGroup 
-            value={draftDisplayUnit} 
-            onValueChange={handleUnitChange} 
+          <RadioGroup
+            value={draftDisplayUnit}
+            onValueChange={handleUnitChange}
             className="flex flex-col sm:flex-row gap-4 lg:gap-6"
             disabled={isSaving}
           >
@@ -146,7 +146,7 @@ export function DisplayUnitsConfig() {
               </div>
             </div>
           </RadioGroup>
-          
+
           <div className="flex-shrink-0">
             <Button
               onClick={handleSave}

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate the request body
     if (!body.displayUnit || !Object.values(DisplayUnit).includes(body.displayUnit)) {
       return NextResponse.json(
@@ -63,10 +63,10 @@ export async function POST(request: NextRequest) {
       serverMetadata: updatedMetadata,
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       preferences,
-      message: "Preferences updated successfully" 
+      message: "Preferences updated successfully",
     });
   } catch (error) {
     console.error("Error updating user preferences:", error);

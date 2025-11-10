@@ -105,11 +105,63 @@ function NavItem(props: { item: Item; onClick?: () => void; basePath: string }) 
   );
 }
 
+function SidebarShimmer() {
+  return (
+    <div className="flex flex-grow flex-col gap-2 pt-4 overflow-y-auto">
+      {/* Overview item shimmer */}
+      <div className="px-2">
+        <div className="flex items-center space-x-2 p-2 rounded">
+          <div className="h-5 w-5 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+          <div className="h-4 w-16 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+        </div>
+      </div>
+
+      {/* Management label shimmer */}
+      <div className="flex my-2">
+        <div className="h-4 w-20 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded px-2"></div>
+      </div>
+
+      {/* Federations item shimmer */}
+      <div className="px-2">
+        <div className="flex items-center space-x-2 p-2 rounded">
+          <div className="h-5 w-5 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+          <div className="h-4 w-20 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+        </div>
+        {/* Sub-items shimmer */}
+        <div className="mt-1 space-y-1 ml-4">
+          {[...Array(2)].map((_, index) => (
+            <div key={index} className="flex items-center space-x-2 p-1 px-2">
+              <div className="h-4 w-4 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+              <div className="h-3 w-24 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Settings label shimmer */}
+      <div className="flex my-2">
+        <div className="h-4 w-16 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded px-2"></div>
+      </div>
+
+      {/* Configuration item shimmer */}
+      <div className="px-2">
+        <div className="flex items-center space-x-2 p-2 rounded">
+          <div className="h-5 w-5 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+          <div className="h-4 w-24 bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite] rounded"></div>
+        </div>
+      </div>
+
+      <div className="flex-grow" />
+    </div>
+  );
+}
+
 function SidebarContent(props: {
   onNavigate?: () => void;
   items: SidebarItem[];
   sidebarTop?: React.ReactNode;
   basePath: string;
+  isLoading?: boolean;
 }) {
   const path = usePathname();
   const segment = useSegment(props.basePath);
@@ -119,29 +171,33 @@ function SidebarContent(props: {
       <div className="h-14 flex items-center px-2 shrink-0 mr-10 md:mr-0 border-b">
         {props.sidebarTop}
       </div>
-      <div className="flex flex-grow flex-col gap-2 pt-4 overflow-y-auto">
-        {props.items.map((item, index) => {
-          if (item.type === "separator") {
-            return <Separator key={index} className="my-2" />;
-          } else if (item.type === "item") {
-            return (
-              <div key={index} className="px-2">
-                <NavItem item={item} onClick={props.onNavigate} basePath={props.basePath} />
-              </div>
-            );
-          } else {
-            return (
-              <div key={index} className="flex my-2">
-                <div className="flex-grow justify-start text-sm font-medium text-zinc-500 px-2">
-                  {item.name}
+      {props.isLoading ? (
+        <SidebarShimmer />
+      ) : (
+        <div className="flex flex-grow flex-col gap-2 pt-4 overflow-y-auto">
+          {props.items.map((item, index) => {
+            if (item.type === "separator") {
+              return <Separator key={index} className="my-2" />;
+            } else if (item.type === "item") {
+              return (
+                <div key={index} className="px-2">
+                  <NavItem item={item} onClick={props.onNavigate} basePath={props.basePath} />
                 </div>
-              </div>
-            );
-          }
-        })}
+              );
+            } else {
+              return (
+                <div key={index} className="flex my-2">
+                  <div className="flex-grow justify-start text-sm font-medium text-zinc-500 px-2">
+                    {item.name}
+                  </div>
+                </div>
+              );
+            }
+          })}
 
-        <div className="flex-grow" />
-      </div>
+          <div className="flex-grow" />
+        </div>
+      )}
     </div>
   );
 }
@@ -184,6 +240,7 @@ export default function SidebarLayout(props: {
   items: SidebarItem[];
   sidebarTop?: React.ReactNode;
   basePath: string;
+  isLoading?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
@@ -195,6 +252,7 @@ export default function SidebarLayout(props: {
           items={props.items}
           sidebarTop={props.sidebarTop}
           basePath={props.basePath}
+          isLoading={props.isLoading}
         />
       </div>
       <div className="flex flex-col flex-grow w-0">
@@ -218,6 +276,7 @@ export default function SidebarLayout(props: {
                   items={props.items}
                   sidebarTop={props.sidebarTop}
                   basePath={props.basePath}
+                  isLoading={props.isLoading}
                 />
               </SheetContent>
             </Sheet>
