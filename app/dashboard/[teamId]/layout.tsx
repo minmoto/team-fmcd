@@ -33,28 +33,6 @@ const navigationItems: SidebarItem[] = [
   },
   {
     type: "label",
-    name: "Transactions",
-  },
-  {
-    name: "Onchain",
-    href: "/onchain",
-    icon: BarChart4,
-    type: "item",
-  },
-  {
-    name: "Lightning",
-    href: "/lightning",
-    icon: ShoppingCart,
-    type: "item",
-  },
-  {
-    name: "Ecash",
-    href: "/ecash",
-    icon: BadgePercent,
-    type: "item",
-  },
-  {
-    type: "label",
     name: "Settings",
   },
   {

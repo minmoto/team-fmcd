@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
 
     // Get federation IDs from the info response
     const federationIds = Object.keys(infoResponse.data);
-    
+
     // Fetch live balance for each federation
     const balancePromises = federationIds.map(async federationId => {
       try {
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
           timeoutMs: 5000,
         });
 
-        if (balanceResponse.data && typeof balanceResponse.data === 'number') {
+        if (balanceResponse.data && typeof balanceResponse.data === "number") {
           return balanceResponse.data;
         }
 
