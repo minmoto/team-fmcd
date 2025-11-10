@@ -20,6 +20,8 @@ import {
   ChevronUp,
   Copy,
   ExternalLink,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { FMCDTransaction } from "@/lib/types/fmcd";
 import { formatDistanceToNow } from "date-fns";
@@ -45,6 +47,8 @@ export function FederationTransactionHistory({
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [totalDeposits, setTotalDeposits] = useState(0);
+  const [totalWithdrawals, setTotalWithdrawals] = useState(0);
   const itemsPerPage = 20;
 
   useEffect(() => {
@@ -74,6 +78,25 @@ export function FederationTransactionHistory({
 
         setTransactions(parsedTransactions);
         setTotalTransactions(data.total || parsedTransactions.length);
+
+        // Calculate totals for deposits and withdrawals
+        let deposits = 0;
+        let withdrawals = 0;
+
+        parsedTransactions.forEach((tx: FMCDTransaction) => {
+          if (tx.status === "completed" && tx.amount_msats > 0) {
+            if (tx.type.includes("receive") || tx.type === "ecash_mint") {
+              // Deposits: money coming in
+              deposits += tx.amount_msats;
+            } else if (tx.type.includes("send") || tx.type === "ecash_spend") {
+              // Withdrawals: money going out
+              withdrawals += tx.amount_msats;
+            }
+          }
+        });
+
+        setTotalDeposits(deposits);
+        setTotalWithdrawals(withdrawals);
       } catch (error) {
         console.error("Error fetching federation transactions:", error);
         setError(error instanceof Error ? error.message : "Failed to load transactions");
@@ -359,6 +382,58 @@ export function FederationTransactionHistory({
             </div>
           )}
         </div>
+
+        {/* Summary Cards */}
+        {!isLoading && transactions.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t">
+            <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex-shrink-0">
+                <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                  Total Deposits
+                </p>
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                  +{formatAmount(totalDeposits)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <div className="flex-shrink-0">
+                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                  Total Withdrawals
+                </p>
+                <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                  -{formatAmount(totalWithdrawals)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex-shrink-0">
+                <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Net Change</p>
+                <p
+                  className={`text-lg font-bold ${
+                    totalDeposits - totalWithdrawals >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {totalDeposits - totalWithdrawals >= 0 ? "+" : ""}
+                  {formatAmount(Math.abs(totalDeposits - totalWithdrawals))}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {isLoading ? (
