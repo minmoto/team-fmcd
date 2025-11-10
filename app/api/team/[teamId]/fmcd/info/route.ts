@@ -34,39 +34,8 @@ async function fetchFederationGateways(
   }
 }
 
-// Helper function to fetch live balance for a specific federation
-async function fetchFederationBalance(
-  federationId: string,
-  config: any
-): Promise<number> {
-  try {
-    // Try the federation-specific balance endpoint first
-    const balanceResponse = await fmcdRequest<any>({
-      endpoint: "/v2/fedimint/balance",
-      method: "POST",
-      body: { federationId },
-      config,
-      maxRetries: 2,
-      timeoutMs: 5000,
-    });
-
-    if (balanceResponse.data && typeof balanceResponse.data === 'number') {
-      console.log(`Fetched live balance for federation ${federationId}: ${balanceResponse.data} msats`);
-      return balanceResponse.data;
-    }
-
-    if (balanceResponse.data && balanceResponse.data.balance_msat) {
-      console.log(`Fetched live balance for federation ${federationId}: ${balanceResponse.data.balance_msat} msats`);
-      return ensureNumber(balanceResponse.data.balance_msat, 0);
-    }
-
-    console.warn(`No balance data found for federation ${federationId}`);
-    return 0;
-  } catch (error) {
-    console.warn(`Error fetching live balance for federation ${federationId}:`, error);
-    return 0;
-  }
-}
+// Note: Balance is already included in the /v2/admin/info response as total_amount_msat
+// No need for separate balance endpoint since FMCD doesn't have /v2/fedimint/balance
 
 export async function GET(request: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
@@ -135,7 +104,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
             balance_msat: ensureNumber(federationData.totalAmountMsat, 0),
             config: {
               global: {
-                federation_name: federationData.meta?.federation_name || "Unknown Federation",
+                federation_name:
+                  federationData.meta?.federationName ||
+                  federationData.meta?.federation_name ||
+                  "Unknown Federation",
                 meta: federationData.meta || {},
                 network: federationData.network || "unknown",
               },
@@ -146,35 +118,30 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       });
     }
 
-    // Fetch gateways and live balances for all federations in parallel
-    const federationPromises = cleanedFederations.map(async federation => {
-      const [gatewayData, liveBalance] = await Promise.all([
-        fetchFederationGateways(federation.federation_id, config),
-        fetchFederationBalance(federation.federation_id, config)
-      ]);
-      
+    // Fetch gateways for all federations in parallel
+    const gatewayPromises = cleanedFederations.map(async federation => {
+      const gatewayData = await fetchFederationGateways(federation.federation_id, config);
+
       return {
         federationId: federation.federation_id,
         gateways: gatewayData.gateways,
         gatewayCount: gatewayData.count,
-        liveBalance: liveBalance,
       };
     });
 
-    // Wait for all federation requests to complete
-    const federationResults = await Promise.all(federationPromises);
+    // Wait for all gateway requests to complete
+    const gatewayResults = await Promise.all(gatewayPromises);
 
-    // Add gateway data and live balances to federations
+    // Add gateway data to federations (balance is already correct from info response)
     const federationsWithGateways = cleanedFederations.map(federation => {
-      const federationData = federationResults.find(
+      const gatewayData = gatewayResults.find(
         result => result.federationId === federation.federation_id
       );
 
       return {
         ...federation,
-        balance_msat: federationData?.liveBalance || federation.balance_msat, // Use live balance if available
-        gateways: federationData?.gateways || [],
-        gatewayCount: federationData?.gatewayCount || 0,
+        gateways: gatewayData?.gateways || [],
+        gatewayCount: gatewayData?.count || 0,
       };
     });
 
