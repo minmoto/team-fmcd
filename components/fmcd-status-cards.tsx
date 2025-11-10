@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Wifi, Bitcoin, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FMCDBalance, FMCDInfo } from "@/lib/types/fmcd";
 import { Badge } from "@/components/ui/badge";
+import { AmountDisplayInline } from "@/components/amount-display";
 
 export function FMCDStatusCards() {
   const params = useParams<{ teamId: string }>();
@@ -49,9 +50,6 @@ export function FMCDStatusCards() {
     }
   }, [params.teamId, loadFMCDData]);
 
-  const formatSats = (msats: number) => {
-    return (msats / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  };
 
   if (loading) {
     return (
@@ -153,10 +151,10 @@ export function FMCDStatusCards() {
         </CardHeader>
         <CardContent className="pt-2">
           <div className="text-4xl font-bold mb-2">
-            {balance ? `${formatSats(balance.total_msats)}` : "No data"}
+            {balance ? <AmountDisplayInline msats={balance.total_msats} /> : "No data"}
           </div>
           <p className="text-sm text-muted-foreground font-medium">
-            {balance ? "sats across all federations" : "Across all federations"}
+            {balance ? "across all federations" : "Across all federations"}
           </p>
         </CardContent>
       </Card>

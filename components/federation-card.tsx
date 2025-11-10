@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
+import { AmountDisplayInline } from "@/components/amount-display";
 
 interface FederationCardProps {
   federation: Federation;
@@ -121,7 +122,7 @@ export function FederationCard({ federation }: FederationCardProps) {
             <span className="text-sm text-muted-foreground">Balance</span>
           </div>
           <span className="font-semibold text-sm sm:text-base break-all">
-            {formatSats(federation.balance_msat)} sats
+            <AmountDisplayInline msats={federation.balance_msat} />
           </span>
         </div>
 

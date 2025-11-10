@@ -1,3 +1,9 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
@@ -20,7 +26,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_NAME: "FMCD Dashboard",
   },
-  outputFileTracingRoot: ".",
+  outputFileTracingRoot: __dirname,
 };
 
 export default nextConfig;

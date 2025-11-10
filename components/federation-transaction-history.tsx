@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { FMCDTransaction } from "@/lib/types/fmcd";
 import { formatDistanceToNow } from "date-fns";
+import { AmountDisplayInline } from "@/components/amount-display";
 
 interface FederationTransactionHistoryProps {
   federationId: string;
@@ -113,7 +114,7 @@ export function FederationTransactionHistory({
       return "-";
     }
     const sats = Math.floor(amountMsats / 1000);
-    return sats.toLocaleString() + " sats";
+    return sats.toLocaleString();
   };
 
   const getTransactionIcon = (type: FMCDTransaction["type"]) => {
@@ -222,12 +223,12 @@ export function FederationTransactionHistory({
     };
 
     return (
-      <div className="mt-3 px-4 py-3 bg-muted/20">
+      <div className="mt-3 px-3 sm:px-4 py-3 bg-muted/20">
         <div className="space-y-3 text-sm">
           {/* Transaction Time */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Time</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <span className="font-medium">Time</span>
               <div className="text-xs text-muted-foreground">
                 {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
               </div>
@@ -239,8 +240,8 @@ export function FederationTransactionHistory({
 
           {/* Amount (if pending) */}
           {transaction.amount_msats === 0 && (
-            <div className="flex items-center justify-between">
-              <span>Amount</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <span className="font-medium">Amount</span>
               <span className="text-muted-foreground">Pending</span>
             </div>
           )}
@@ -248,8 +249,8 @@ export function FederationTransactionHistory({
           {/* Bitcoin Address for onchain transactions */}
           {transaction.type.includes("onchain") && transaction.address && (
             <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span>Bitcoin Address</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <span className="font-medium">Bitcoin Address</span>
                 <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
@@ -278,7 +279,7 @@ export function FederationTransactionHistory({
                 </div>
               </div>
               <div className="text-xs font-mono text-muted-foreground break-all">
-                <span className="block sm:hidden">{truncateId(transaction.address, 24)}</span>
+                <span className="block sm:hidden">{truncateId(transaction.address, 32)}</span>
                 <span className="hidden sm:block">{transaction.address}</span>
               </div>
             </div>
@@ -286,13 +287,13 @@ export function FederationTransactionHistory({
 
           {/* Transaction ID */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Transaction ID</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <span className="font-medium">Transaction ID</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => copyToClipboard(transaction.id || "", "id")}
-                className="h-6 w-6 p-0"
+                className="h-6 w-6 p-0 self-start sm:self-center"
               >
                 {copiedField === "id" ? (
                   <span className="text-green-600 text-xs">✓</span>
@@ -302,20 +303,20 @@ export function FederationTransactionHistory({
               </Button>
             </div>
             <div className="text-xs font-mono text-muted-foreground break-all">
-              <span className="block sm:hidden">{truncateId(transaction.id, 24)}</span>
+              <span className="block sm:hidden">{truncateId(transaction.id, 32)}</span>
               <span className="hidden sm:block">{transaction.id}</span>
             </div>
           </div>
 
           {/* Federation ID */}
           <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span>Federation ID</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <span className="font-medium">Federation ID</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => copyToClipboard(transaction.federation_id || "", "federation")}
-                className="h-6 w-6 p-0"
+                className="h-6 w-6 p-0 self-start sm:self-center"
               >
                 {copiedField === "federation" ? (
                   <span className="text-green-600 text-xs">✓</span>
@@ -326,7 +327,7 @@ export function FederationTransactionHistory({
             </div>
             <div className="text-xs font-mono text-muted-foreground break-all">
               <span className="block sm:hidden">
-                {truncateId(transaction.federation_id || "", 24)}
+                {truncateId(transaction.federation_id || "", 32)}
               </span>
               <span className="hidden sm:block">{transaction.federation_id}</span>
             </div>
@@ -334,9 +335,11 @@ export function FederationTransactionHistory({
 
           {/* Description */}
           {transaction.description && transaction.description !== transaction.type && (
-            <div className="flex items-center justify-between">
-              <span>Description</span>
-              <span className="text-muted-foreground">{transaction.description}</span>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
+              <span className="font-medium">Description</span>
+              <span className="text-muted-foreground text-left sm:text-right break-words">
+                {transaction.description}
+              </span>
             </div>
           )}
         </div>
@@ -385,50 +388,50 @@ export function FederationTransactionHistory({
 
         {/* Summary Cards */}
         {!isLoading && transactions.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4 pt-4 border-t">
             <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div className="flex-shrink-0">
-                <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                <p className="text-xs sm:text-sm font-medium text-green-900 dark:text-green-100">
                   Total Deposits
                 </p>
-                <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                  +{formatAmount(totalDeposits)}
+                <p className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
+                  +<AmountDisplayInline msats={totalDeposits} amountOnly />
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <div className="flex-shrink-0">
-                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                <p className="text-xs sm:text-sm font-medium text-red-900 dark:text-red-100">
                   Total Withdrawals
                 </p>
-                <p className="text-lg font-bold text-red-600 dark:text-red-400">
-                  -{formatAmount(totalWithdrawals)}
+                <p className="text-sm sm:text-lg font-bold text-red-600 dark:text-red-400">
+                  -<AmountDisplayInline msats={totalWithdrawals} amountOnly />
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg sm:col-span-2 lg:col-span-1">
               <div className="flex-shrink-0">
-                <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Net Change</p>
+                <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">Net Change</p>
                 <p
-                  className={`text-lg font-bold ${
+                  className={`text-sm sm:text-lg font-bold ${
                     totalDeposits - totalWithdrawals >= 0
                       ? "text-green-600 dark:text-green-400"
                       : "text-red-600 dark:text-red-400"
                   }`}
                 >
                   {totalDeposits - totalWithdrawals >= 0 ? "+" : ""}
-                  {formatAmount(Math.abs(totalDeposits - totalWithdrawals))}
+                  <AmountDisplayInline msats={Math.abs(totalDeposits - totalWithdrawals)} amountOnly />
                 </p>
               </div>
             </div>
@@ -465,39 +468,45 @@ export function FederationTransactionHistory({
                 return (
                   <div key={transaction.id} className="border rounded-lg overflow-hidden">
                     <div
-                      className="flex items-center justify-between space-x-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="flex items-start sm:items-center justify-between space-x-2 sm:space-x-3 p-3 cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => toggleTransactionExpansion(transaction.id)}
                     >
-                      <div className="flex items-center space-x-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0">{getTransactionIcon(transaction.type)}</div>
+                      <div className="flex items-start sm:items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0 mt-0.5 sm:mt-0">{getTransactionIcon(transaction.type)}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                             <p className="text-sm font-medium truncate">
                               {getTransactionDescription(transaction)}
                             </p>
                             {getStatusBadge(transaction.status)}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span title={transaction.id}>ID: {transaction.id.slice(0, 8)}...</span>
-                            <span>•</span>
-                            <span title={transaction.timestamp.toLocaleString()}>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground mt-1">
+                            <span title={transaction.id} className="truncate">
+                              ID: {transaction.id.slice(0, 8)}...
+                            </span>
+                            <span className="hidden sm:inline">•</span>
+                            <span title={transaction.timestamp.toLocaleString()} className="truncate">
                               {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         <div className="text-right">
                           <p
                             className={`text-sm font-medium ${transaction.amount_msats === 0 ? "text-muted-foreground" : getTransactionColor(transaction.type)}`}
                           >
-                            {transaction.amount_msats === 0
-                              ? ""
-                              : transaction.type.includes("receive") ||
-                                  transaction.type === "ecash_mint"
-                                ? "+"
-                                : "-"}
-                            {formatAmount(Math.abs(transaction.amount_msats))}
+                            {transaction.amount_msats === 0 ? (
+                              "—"
+                            ) : (
+                              <>
+                                {transaction.type.includes("receive") ||
+                                transaction.type === "ecash_mint"
+                                  ? "+"
+                                  : "-"}
+                                <AmountDisplayInline msats={Math.abs(transaction.amount_msats)} amountOnly />
+                              </>
+                            )}
                           </p>
                         </div>
                         <div className="flex-shrink-0">
@@ -517,28 +526,32 @@ export function FederationTransactionHistory({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
+                    className="flex items-center"
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
+                    className="flex items-center"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
+                    <span className="sm:hidden">Next</span>
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground text-center sm:text-right">
                   Page {currentPage} of {totalPages}
                 </div>
               </div>

@@ -189,7 +189,7 @@ export function FMCDConfigComponent() {
           </Alert>
           {status && (
             <div className="mt-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <span className="text-sm font-medium">Connection Status:</span>
                 {getStatusBadge()}
               </div>
@@ -209,20 +209,29 @@ export function FMCDConfigComponent() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>📡 FMCD Instance Configuration</span>
-            {getStatusBadge()}
-          </CardTitle>
-          <CardDescription>
-            Configure the FMCD instance for this team. All team members will access the same
-            instance.
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex-1">
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-lg">📡 FMCD Instance Configuration</span>
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Configure the FMCD instance for this team. All team members will access the same
+                instance.
+              </CardDescription>
+            </div>
+            <div className="flex-shrink-0">
+              {getStatusBadge()}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {status && (
             <div className="p-3 bg-muted rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Status: {getStatusBadge()}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Status:</span>
+                  {getStatusBadge()}
+                </div>
                 <span className="text-xs text-muted-foreground">
                   Last checked: {new Date(status.lastChecked).toLocaleString()}
                 </span>
@@ -307,21 +316,25 @@ export function FMCDConfigComponent() {
             </Alert>
           )}
 
-          <div className="flex space-x-2 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 pt-4">
             <Button
               onClick={handleTest}
               variant="outline"
               disabled={testing || !formData.baseUrl || !formData.password}
+              className="w-full sm:w-auto"
             >
               {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Test Connection
+              <span className="hidden sm:inline">Test Connection</span>
+              <span className="sm:hidden">Test</span>
             </Button>
             <Button
               onClick={handleSave}
               disabled={saving || !formData.baseUrl || !formData.password}
+              className="w-full sm:w-auto"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Save Configuration
+              <span className="hidden sm:inline">Save Configuration</span>
+              <span className="sm:hidden">Save</span>
             </Button>
           </div>
         </CardContent>

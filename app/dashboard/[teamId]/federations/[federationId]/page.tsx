@@ -29,6 +29,7 @@ import {
 import { FMCDInfo, Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
 import { FederationTransactionHistory } from "@/components/federation-transaction-history";
+import { AmountDisplay } from "@/components/amount-display";
 
 export default function FederationDetailsPage() {
   const params = useParams<{ teamId: string; federationId: string }>();
@@ -73,14 +74,6 @@ export default function FederationDetailsPage() {
     }
   }, [params.teamId, params.federationId]);
 
-  const formatSats = (msats: number) => {
-    return (msats / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 });
-  };
-
-  const formatBtc = (msats: number) => {
-    const btc = msats / 100000000000; // Convert msats to BTC (1 BTC = 100,000,000 sats = 100,000,000,000 msats)
-    return btc.toFixed(8); // Show 8 decimal places for BTC precision
-  };
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -121,25 +114,30 @@ export default function FederationDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center space-x-4 mb-6">
-          <Button variant="ghost" size="icon" disabled>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="space-y-2 flex-1">
-            <div className="h-8 bg-gray-200 rounded animate-pulse w-1/3"></div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse w-1/4"></div>
+      <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 mb-6">
+          <div className="flex items-center space-x-4 flex-1">
+            <Button variant="ghost" size="icon" disabled>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="space-y-2 flex-1">
+              <div className="h-6 sm:h-8 bg-gray-200 rounded animate-pulse w-1/2 sm:w-1/3"></div>
+              <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse w-1/3 sm:w-1/4"></div>
+            </div>
+          </div>
+          <div className="w-full sm:w-auto">
+            <div className="h-10 bg-gray-200 rounded animate-pulse w-full sm:w-24"></div>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
                 <div className="h-5 bg-gray-200 rounded animate-pulse mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-6 sm:h-8 bg-gray-200 rounded animate-pulse"></div>
               </CardContent>
             </Card>
           ))}
@@ -150,17 +148,17 @@ export default function FederationDetailsPage() {
 
   if (error) {
     return (
-      <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
         <div className="flex items-center space-x-4 mb-6">
           <Button variant="ghost" size="icon" asChild>
             <Link href={`/dashboard/${params.teamId}/federations`}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h2 className="text-3xl font-bold tracking-tight">Federation Details</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Federation Details</h2>
         </div>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center space-x-2">
               <XCircle className="w-5 h-5 text-red-500" />
               <span className="text-red-600">Unable to load federation details</span>
@@ -182,20 +180,22 @@ export default function FederationDetailsPage() {
   const metaExternalUrl = federation.config.global.meta?.meta_external_url;
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
+    <div className="flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8 pt-4 sm:pt-6">
       {/* Header with Back Button */}
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={`/dashboard/${params.teamId}/federations`}>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h2 className="text-3xl font-bold tracking-tight">{federationName}</h2>
-          <p className="text-sm text-muted-foreground">Federation details and information</p>
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+        <div className="flex items-center space-x-4 flex-1">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/dashboard/${params.teamId}/federations`}>
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">{federationName}</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">Federation details and information</p>
+          </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button onClick={() => setIsDepositModalOpen(true)} className="h-fit">
+        <div className="flex items-center justify-center sm:justify-end">
+          <Button onClick={() => setIsDepositModalOpen(true)} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Deposit
           </Button>
@@ -203,7 +203,7 @@ export default function FederationDetailsPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Balance Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -211,10 +211,12 @@ export default function FederationDetailsPage() {
             <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatSats(federation.balance_msat)} sats</div>
-            <p className="text-xs text-muted-foreground">
-              {formatBtc(federation.balance_msat)} BTC
-            </p>
+            <AmountDisplay
+              msats={federation.balance_msat}
+              showSecondary={true}
+              className="text-xl sm:text-2xl font-bold"
+              secondaryClassName="text-xs text-muted-foreground"
+            />
           </CardContent>
         </Card>
 
@@ -225,7 +227,7 @@ export default function FederationDetailsPage() {
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{federation.gatewayCount || 0}</div>
+            <div className="text-xl sm:text-2xl font-bold">{federation.gatewayCount || 0}</div>
             <p className="text-xs text-muted-foreground">
               {federation.gatewayCount === 1 ? "gateway" : "gateways"} available
             </p>
@@ -239,7 +241,7 @@ export default function FederationDetailsPage() {
             <Network className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold capitalize">
+            <div className="text-xl sm:text-2xl font-bold capitalize">
               {federation.config.global.network || "Unknown"}
             </div>
             <p className="text-xs text-muted-foreground">Bitcoin network</p>
@@ -253,7 +255,7 @@ export default function FederationDetailsPage() {
             <StatusIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{connectionStatus.label}</div>
+            <div className="text-xl sm:text-2xl font-bold">{connectionStatus.label}</div>
             <p className="text-xs text-muted-foreground">Federation is operational</p>
           </CardContent>
         </Card>
@@ -295,15 +297,15 @@ export default function FederationDetailsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                   {federation.gateways.map((gateway, index) => (
                     <Card key={gateway.info.gateway_id || index} className="border-dashed">
                       <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm font-medium">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <CardTitle className="text-sm font-medium truncate">
                             {gateway.info.lightning_alias || `Gateway ${index + 1}`}
                           </CardTitle>
-                          <Badge variant={gateway.vetted ? "default" : "secondary"}>
+                          <Badge variant={gateway.vetted ? "default" : "secondary"} className="self-start sm:self-center">
                             <Activity className="w-3 h-3 mr-1" />
                             {gateway.vetted ? "Vetted" : "Unvetted"}
                           </Badge>
@@ -316,7 +318,8 @@ export default function FederationDetailsPage() {
                             Gateway ID
                           </div>
                           <div className="text-xs font-mono bg-muted p-2 rounded break-all">
-                            {gateway.info.gateway_id}
+                            <span className="block sm:hidden">{gateway.info.gateway_id.slice(0, 32)}...</span>
+                            <span className="hidden sm:block">{gateway.info.gateway_id}</span>
                           </div>
                         </div>
 
@@ -326,7 +329,8 @@ export default function FederationDetailsPage() {
                             Node Public Key
                           </div>
                           <div className="text-xs font-mono bg-muted p-2 rounded break-all">
-                            {gateway.info.node_pub_key}
+                            <span className="block sm:hidden">{gateway.info.node_pub_key.slice(0, 32)}...</span>
+                            <span className="hidden sm:block">{gateway.info.node_pub_key}</span>
                           </div>
                         </div>
 
@@ -340,7 +344,8 @@ export default function FederationDetailsPage() {
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline"
                             >
-                              {gateway.info.api}
+                              <span className="block sm:hidden">{gateway.info.api.length > 40 ? `${gateway.info.api.slice(0, 40)}...` : gateway.info.api}</span>
+                              <span className="hidden sm:block">{gateway.info.api}</span>
                             </a>
                           </div>
                         </div>
@@ -349,10 +354,15 @@ export default function FederationDetailsPage() {
                         <div className="space-y-1">
                           <div className="text-xs font-medium text-muted-foreground">Fees</div>
                           <div className="text-xs space-y-1">
-                            <div>Base: {gateway.info.fees.base_msat} msat</div>
-                            <div>
-                              Rate: {(gateway.info.fees.proportional_millionths / 10000).toFixed(2)}
-                              %
+                            <div className="flex justify-between sm:block">
+                              <span>Base:</span>
+                              <span className="font-mono">{gateway.info.fees.base_msat} msat</span>
+                            </div>
+                            <div className="flex justify-between sm:block">
+                              <span>Rate:</span>
+                              <span className="font-mono">
+                                {(gateway.info.fees.proportional_millionths / 10000).toFixed(2)}%
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -360,16 +370,20 @@ export default function FederationDetailsPage() {
                         {/* Channel Info */}
                         <div className="space-y-1">
                           <div className="text-xs font-medium text-muted-foreground">Channel</div>
-                          <div className="text-xs">ID: {gateway.info.mint_channel_id}</div>
+                          <div className="text-xs flex justify-between sm:block">
+                            <span>ID:</span>
+                            <span className="font-mono break-all">{gateway.info.mint_channel_id}</span>
+                          </div>
                         </div>
 
                         {/* Private Payments */}
                         <div className="space-y-1">
                           <div className="text-xs font-medium text-muted-foreground">Features</div>
                           <div className="text-xs">
-                            {gateway.info.supports_private_payments
-                              ? "✓ Private Payments"
-                              : "✗ No Private Payments"}
+                            <span className={`inline-flex items-center ${gateway.info.supports_private_payments ? 'text-green-600' : 'text-red-600'}`}>
+                              {gateway.info.supports_private_payments ? "✓" : "✗"}
+                              <span className="ml-1">Private Payments</span>
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -416,7 +430,7 @@ export default function FederationDetailsPage() {
             <CardContent className="space-y-4">
               {/* Federation ID */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <label className="text-sm font-medium flex items-center space-x-2">
                     <Shield className="h-4 w-4 text-muted-foreground" />
                     <span>Federation ID</span>
@@ -425,6 +439,7 @@ export default function FederationDetailsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => copyToClipboard(federation.federation_id)}
+                    className="self-start sm:self-center"
                   >
                     {copiedId ? (
                       <>
@@ -440,7 +455,10 @@ export default function FederationDetailsPage() {
                   </Button>
                 </div>
                 <div className="p-3 bg-muted rounded-md">
-                  <code className="text-xs break-all font-mono">{federation.federation_id}</code>
+                  <code className="text-xs break-all font-mono">
+                    <span className="block sm:hidden">{federation.federation_id.slice(0, 32)}...</span>
+                    <span className="hidden sm:block">{federation.federation_id}</span>
+                  </code>
                 </div>
               </div>
 
@@ -452,7 +470,7 @@ export default function FederationDetailsPage() {
                   <Network className="h-4 w-4 text-muted-foreground" />
                   <span>Federation Name</span>
                 </label>
-                <div className="text-sm">{federationName}</div>
+                <div className="text-sm break-words">{federationName}</div>
               </div>
 
               {/* Network */}
@@ -479,10 +497,13 @@ export default function FederationDetailsPage() {
                       href={metaExternalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline flex items-center space-x-1"
+                      className="text-sm text-primary hover:underline flex items-center space-x-1 break-all"
                     >
-                      <span>{metaExternalUrl}</span>
-                      <ExternalLink className="h-3 w-3" />
+                      <span className="break-all">
+                        <span className="block sm:hidden">{metaExternalUrl.length > 40 ? `${metaExternalUrl.slice(0, 40)}...` : metaExternalUrl}</span>
+                        <span className="hidden sm:block">{metaExternalUrl}</span>
+                      </span>
+                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
                     </a>
                   </div>
                 </>
@@ -499,17 +520,17 @@ export default function FederationDetailsPage() {
                   <CardDescription>Metadata provided by the federation</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {Object.entries(federation.config.global.meta).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-start py-2">
-                        <span className="text-sm font-medium text-muted-foreground capitalize">
+                      <div key={key} className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground capitalize">
                           {key.replace(/_/g, " ")}
-                        </span>
-                        <span className="text-sm text-right max-w-[60%] break-words">
+                        </div>
+                        <div className="text-sm break-words bg-muted p-2 rounded">
                           {typeof value === "object"
                             ? JSON.stringify(value, null, 2)
                             : String(value)}
-                        </span>
+                        </div>
                       </div>
                     ))}
                   </div>
