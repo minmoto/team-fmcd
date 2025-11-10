@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Federation } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
+import { FederationStatsSummary } from "@/components/federation-stats-summary";
 import { AmountDisplayInline } from "@/components/amount-display";
 
 interface FederationCardProps {
@@ -147,6 +148,12 @@ export function FederationCard({ federation }: FederationCardProps) {
             </Badge>
           </div>
         )}
+
+        {/* Transaction Stats Summary */}
+        <FederationStatsSummary
+          federationId={federation.federation_id}
+          federationName={federation.config.global.federation_name}
+        />
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
