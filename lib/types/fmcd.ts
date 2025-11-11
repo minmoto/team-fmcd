@@ -58,9 +58,15 @@ export interface Federation {
     };
   };
   // Fields computed/assumed since not in API response
-  status?: "active" | "inactive" | "syncing";
+  status?: FederationStatus;
   gateways?: Gateway[]; // Gateway information for this federation
   gatewayCount?: number; // Cached gateway count
+}
+
+export enum FederationStatus {
+  Active = "active",
+  Inactive = "inactive",
+  Syncing = "syncing",
 }
 
 export interface FMCDBalance {
@@ -70,21 +76,30 @@ export interface FMCDBalance {
   onchain_sats: number;
 }
 
+export enum FMCDTransactionStatus {
+  Pending = "pending",
+  Completed = "completed",
+  Failed = "failed",
+}
+
 export interface FMCDTransaction {
   id: string;
-  type:
-    | "lightning_receive"
-    | "lightning_send"
-    | "ecash_mint"
-    | "ecash_spend"
-    | "onchain_receive"
-    | "onchain_send";
+  type: FMCDTransactionType;
   amount_msats: number;
   timestamp: Date;
-  status: "pending" | "completed" | "failed";
+  status: FMCDTransactionStatus;
   federation_id?: string;
   description?: string;
   address?: string; // Bitcoin address for onchain transactions
+}
+
+export enum FMCDTransactionType {
+  LightningReceive = "lightning_receive",
+  LightningSend = "lightning_send",
+  EcashMint = "ecash_mint",
+  EcashSpend = "ecash_spend",
+  OnchainReceive = "onchain_receive",
+  OnchainSend = "onchain_send",
 }
 
 export interface OnchainAddressRequest {

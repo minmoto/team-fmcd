@@ -1,6 +1,6 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
-import { FMCDTransaction } from "@/lib/types/fmcd";
+import { FMCDTransaction, FMCDTransactionType, FMCDTransactionStatus } from "@/lib/types/fmcd";
 import { getTeamConfig } from "@/lib/storage/team-storage";
 import { fmcdRequest, ensureNumber } from "@/lib/fmcd/utils";
 import {
@@ -96,21 +96,21 @@ async function fetchAllFederationTransactions(
     const operations = response.data.operations || [];
     return operations.map((op: any) => {
       let amountMsats = 0;
-      let type: FMCDTransaction["type"] = "ecash_mint";
-      let status: FMCDTransaction["status"] = "pending";
+      let type: FMCDTransaction["type"] = FMCDTransactionType.EcashMint;
+      let status: FMCDTransaction["status"] = FMCDTransactionStatus.Pending;
 
       // Determine transaction type and amount
       if (op.operationKind === "ln") {
         if (op.operationMeta?.variant?.receive) {
-          type = "lightning_receive";
+          type = FMCDTransactionType.LightningReceive;
           const invoice = op.operationMeta.variant.receive.invoice;
           if (invoice) amountMsats = extractAmountFromInvoice(invoice);
         } else if (op.operationMeta?.variant?.pay) {
-          type = "lightning_send";
+          type = FMCDTransactionType.LightningSend;
           const invoice = op.operationMeta.variant.pay.invoice;
           if (invoice) amountMsats = extractAmountFromInvoice(invoice);
         } else if (op.operationMeta?.variant?.send) {
-          type = "lightning_send";
+          type = FMCDTransactionType.LightningSend;
           const invoice = op.operationMeta.variant.send?.invoice;
           if (invoice) amountMsats = extractAmountFromInvoice(invoice);
         }
@@ -124,12 +124,12 @@ async function fetchAllFederationTransactions(
         }
       } else if (op.operationKind === "wallet") {
         if (op.operationMeta?.variant?.deposit) {
-          type = "onchain_receive";
+          type = FMCDTransactionType.OnchainReceive;
           if (op.outcome?.Claimed?.btc_deposited) {
             amountMsats = op.outcome.Claimed.btc_deposited * 1000;
           }
         } else if (op.operationMeta?.variant?.withdraw) {
-          type = "onchain_send";
+          type = FMCDTransactionType.OnchainSend;
           if (op.operationMeta?.amount_sat) {
             amountMsats = ensureNumber(op.operationMeta.amount_sat) * 1000;
           } else if (op.operationMeta?.variant?.withdraw?.amount_sat) {
@@ -141,11 +141,14 @@ async function fetchAllFederationTransactions(
       // Determine status
       if (op.outcome) {
         if (typeof op.outcome === "string") {
-          status = op.outcome === "claimed" ? "completed" : "failed";
+          status =
+            op.outcome === "claimed"
+              ? FMCDTransactionStatus.Completed
+              : FMCDTransactionStatus.Failed;
         } else if (op.outcome.Claimed) {
-          status = "completed";
+          status = FMCDTransactionStatus.Completed;
         } else if (op.outcome.canceled || op.outcome.failed) {
-          status = "failed";
+          status = FMCDTransactionStatus.Failed;
         }
       }
 
@@ -214,41 +217,41 @@ function aggregateTransactionsByPeriod(
 
     periodTransactions.forEach(tx => {
       // Add to total volume only if transaction has completed successfully
-      if (tx.status === "completed" && tx.amount_msats > 0) {
+      if (tx.status === FMCDTransactionStatus.Completed && tx.amount_msats > 0) {
         periodStats.totalVolumeMsats += tx.amount_msats;
       }
 
       // Count by transaction type
       switch (tx.type) {
-        case "lightning_receive":
+        case FMCDTransactionType.LightningReceive:
           periodStats.lightningReceive++;
           break;
-        case "lightning_send":
+        case FMCDTransactionType.LightningSend:
           periodStats.lightningSend++;
           break;
-        case "onchain_receive":
+        case FMCDTransactionType.OnchainReceive:
           periodStats.onchainReceive++;
           break;
-        case "onchain_send":
+        case FMCDTransactionType.OnchainSend:
           periodStats.onchainSend++;
           break;
-        case "ecash_mint":
+        case FMCDTransactionType.EcashMint:
           periodStats.ecashMint++;
           break;
-        case "ecash_spend":
+        case FMCDTransactionType.EcashSpend:
           periodStats.ecashSpend++;
           break;
       }
 
       // Count by status
       switch (tx.status) {
-        case "completed":
+        case FMCDTransactionStatus.Completed:
           periodStats.completedTransactions++;
           break;
-        case "failed":
+        case FMCDTransactionStatus.Failed:
           periodStats.failedTransactions++;
           break;
-        case "pending":
+        case FMCDTransactionStatus.Pending:
           periodStats.pendingTransactions++;
           break;
       }

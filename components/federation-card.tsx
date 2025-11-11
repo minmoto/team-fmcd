@@ -18,7 +18,7 @@ import {
   Plus,
   Zap,
 } from "lucide-react";
-import { Federation } from "@/lib/types/fmcd";
+import { Federation, FederationStatus } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
 // import { FederationStatsSummary } from "@/components/federation-stats-summary";
 import { AmountDisplayInline } from "@/components/amount-display";
@@ -48,18 +48,23 @@ export function FederationCard({ federation }: FederationCardProps) {
   };
 
   const getConnectionStatus = (federation: Federation) => {
-    if (federation.status === "active") {
-      return { status: "active", label: "Active", variant: "default" as const, icon: CheckCircle };
-    } else if (federation.status === "syncing") {
+    if (federation.status === FederationStatus.Active) {
       return {
-        status: "syncing",
+        status: FederationStatus.Active,
+        label: "Active",
+        variant: "default" as const,
+        icon: CheckCircle,
+      };
+    } else if (federation.status === FederationStatus.Syncing) {
+      return {
+        status: FederationStatus.Syncing,
         label: "Syncing",
         variant: "secondary" as const,
         icon: AlertTriangle,
       };
-    } else if (federation.status === "inactive") {
+    } else if (federation.status === FederationStatus.Inactive) {
       return {
-        status: "inactive",
+        status: FederationStatus.Inactive,
         label: "Inactive",
         variant: "destructive" as const,
         icon: XCircle,
@@ -67,7 +72,7 @@ export function FederationCard({ federation }: FederationCardProps) {
     } else {
       // Default to active if no status is provided
       return {
-        status: "active",
+        status: FederationStatus.Active,
         label: "Connected",
         variant: "default" as const,
         icon: CheckCircle,

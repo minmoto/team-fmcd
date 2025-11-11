@@ -1,6 +1,6 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
-import { FMCDTransaction } from "@/lib/types/fmcd";
+import { FMCDTransaction, FMCDTransactionType, FMCDTransactionStatus } from "@/lib/types/fmcd";
 import { getTeamConfig } from "@/lib/storage/team-storage";
 import { fmcdRequest, ensureNumber } from "@/lib/fmcd/utils";
 
@@ -81,29 +81,32 @@ async function fetchFederationTransactions(
     return operations.map((op: any) => {
       // Extract amount based on operation type and outcome
       let amountMsats = 0;
-      let type: FMCDTransaction["type"] = "ecash_mint";
-      let status: FMCDTransaction["status"] = "pending";
+      let type: FMCDTransaction["type"] = FMCDTransactionType.EcashMint;
+      let status: FMCDTransaction["status"] = FMCDTransactionStatus.Pending;
       let address: string | undefined;
+
+      console.log("OPERATIONS");
+      console.log(op);
 
       // Determine transaction type and amount
       if (op.operationKind === "ln") {
         // Lightning operations
         if (op.operationMeta?.variant?.receive) {
-          type = "lightning_receive";
+          type = FMCDTransactionType.LightningReceive;
           // Try to parse amount from Lightning invoice if available
           const invoice = op.operationMeta.variant.receive.invoice;
           if (invoice) {
             amountMsats = extractAmountFromInvoice(invoice);
           }
         } else if (op.operationMeta?.variant?.pay) {
-          type = "lightning_send";
+          type = FMCDTransactionType.LightningSend;
           // Extract amount from the pay invoice
           const invoice = op.operationMeta.variant.pay.invoice;
           if (invoice) {
             amountMsats = extractAmountFromInvoice(invoice);
           }
         } else if (op.operationMeta?.variant?.send) {
-          type = "lightning_send";
+          type = FMCDTransactionType.LightningSend;
           // Try variant.send if variant.pay doesn't exist
           const invoice = op.operationMeta.variant.send?.invoice;
           if (invoice) {
@@ -125,14 +128,14 @@ async function fetchFederationTransactions(
       } else if (op.operationKind === "wallet") {
         // Wallet operations (onchain)
         if (op.operationMeta?.variant?.deposit) {
-          type = "onchain_receive";
+          type = FMCDTransactionType.OnchainReceive;
           address = op.operationMeta.variant.deposit.address;
           // For completed wallet deposits, amount is in outcome.Claimed.btc_deposited (satoshis)
           if (op.outcome?.Claimed?.btc_deposited) {
             amountMsats = op.outcome.Claimed.btc_deposited * 1000; // Convert sats to msats
           }
         } else if (op.operationMeta?.variant?.withdraw) {
-          type = "onchain_send";
+          type = FMCDTransactionType.OnchainSend;
           address = op.operationMeta.variant.withdraw.address;
           // For withdraw, check amount_sat in operationMeta or variant
           if (op.operationMeta?.amount_sat) {
@@ -146,11 +149,14 @@ async function fetchFederationTransactions(
       // Determine status
       if (op.outcome) {
         if (typeof op.outcome === "string") {
-          status = op.outcome === "claimed" ? "completed" : "failed";
+          status =
+            op.outcome === "claimed"
+              ? FMCDTransactionStatus.Completed
+              : FMCDTransactionStatus.Failed;
         } else if (op.outcome.Claimed) {
-          status = "completed";
+          status = FMCDTransactionStatus.Completed;
         } else if (op.outcome.canceled || op.outcome.failed) {
-          status = "failed";
+          status = FMCDTransactionStatus.Failed;
         }
       }
 

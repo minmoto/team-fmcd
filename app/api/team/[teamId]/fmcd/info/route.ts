@@ -1,6 +1,6 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
-import { FMCDInfo, Federation, Gateway, GatewayResponse } from "@/lib/types/fmcd";
+import { FMCDInfo, Federation, Gateway, GatewayResponse, FederationStatus } from "@/lib/types/fmcd";
 import { getTeamConfig, saveTeamStatus } from "@/lib/storage/team-storage";
 import { fmcdRequest, ensureArray, ensureNumber, ensureObject } from "@/lib/fmcd/utils";
 
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
                 network: federationData.network || "unknown",
               },
             },
-            status: "active" as const, // Assume active if present
+            status: FederationStatus.Active, // Assume active if present
           });
         }
       });

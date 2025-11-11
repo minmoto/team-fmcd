@@ -24,9 +24,8 @@ import {
   Zap,
   Activity,
   TrendingUp,
-  TrendingDown,
 } from "lucide-react";
-import { FMCDInfo, Federation } from "@/lib/types/fmcd";
+import { FMCDInfo, Federation, FederationStatus } from "@/lib/types/fmcd";
 import { DepositModal } from "@/components/deposit-modal";
 import { FederationTransactionHistory } from "@/components/federation-transaction-history";
 import { TransactionStatsDashboard } from "@/components/transaction-stats-dashboard";
@@ -86,25 +85,30 @@ export default function FederationDetailsPage() {
   };
 
   const getConnectionStatus = (federation: Federation) => {
-    if (federation.status === "active") {
-      return { status: "active", label: "Active", variant: "default" as const, icon: CheckCircle };
-    } else if (federation.status === "syncing") {
+    if (federation.status === FederationStatus.Active) {
       return {
-        status: "syncing",
+        status: FederationStatus.Active,
+        label: "Active",
+        variant: "default" as const,
+        icon: CheckCircle,
+      };
+    } else if (federation.status === FederationStatus.Syncing) {
+      return {
+        status: FederationStatus.Syncing,
         label: "Syncing",
         variant: "secondary" as const,
         icon: AlertTriangle,
       };
-    } else if (federation.status === "inactive") {
+    } else if (federation.status === FederationStatus.Inactive) {
       return {
-        status: "inactive",
+        status: FederationStatus.Inactive,
         label: "Inactive",
         variant: "destructive" as const,
         icon: XCircle,
       };
     } else {
       return {
-        status: "active",
+        status: FederationStatus.Active,
         label: "Connected",
         variant: "default" as const,
         icon: CheckCircle,
@@ -268,15 +272,15 @@ export default function FederationDetailsPage() {
       </div>
 
       {/* Tabbed Content */}
-      <Tabs defaultValue="statistics" className="w-full">
+      <Tabs defaultValue="transactions" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="statistics" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Statistics
-          </TabsTrigger>
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Transaction History
+          </TabsTrigger>
+          <TabsTrigger value="statistics" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Statistics
           </TabsTrigger>
           <TabsTrigger value="details" className="flex items-center gap-2">
             <Info className="h-4 w-4" />
@@ -284,17 +288,17 @@ export default function FederationDetailsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Statistics Tab */}
-        <TabsContent value="statistics" className="mt-6">
-          <TransactionStatsDashboard federationId={federation.federation_id} />
-        </TabsContent>
-
         {/* Transaction History Tab */}
         <TabsContent value="transactions" className="mt-6">
           <FederationTransactionHistory
             federationId={federation.federation_id}
             network={federation.config.global.network}
           />
+        </TabsContent>
+
+        {/* Statistics Tab */}
+        <TabsContent value="statistics" className="mt-6">
+          <TransactionStatsDashboard federationId={federation.federation_id} />
         </TabsContent>
 
         {/* Technical Details Tab */}
