@@ -60,6 +60,7 @@ export function FederationTransactionHistory({
         setIsLoading(true);
         setError(null);
 
+        // Fetch paginated transactions for display
         const response = await fetch(
           `/api/team/${teamId}/fmcd/transactions?federationId=${federationId}&limit=${itemsPerPage}&page=${currentPage}`
         );
@@ -80,16 +81,44 @@ export function FederationTransactionHistory({
         setTransactions(parsedTransactions);
         setTotalTransactions(data.total || parsedTransactions.length);
 
-        // Calculate totals for deposits and withdrawals
+        // Fetch ALL transactions for accurate totals calculation
+        // Use a high limit to get all transactions for this federation
+        const allTransactionsResponse = await fetch(
+          `/api/team/${teamId}/fmcd/transactions?federationId=${federationId}&limit=10000&page=1`
+        );
+
+        let allTransactions = [];
+        if (allTransactionsResponse.ok) {
+          const allData = await allTransactionsResponse.json();
+          allTransactions = (allData.transactions || allData).map((tx: any) => ({
+            ...tx,
+            timestamp: new Date(tx.timestamp),
+          }));
+        } else {
+          // Fallback to using paginated data if all transactions fetch fails
+          allTransactions = parsedTransactions;
+        }
+
+        // Calculate totals for deposits and withdrawals using ALL transactions
         let deposits = 0;
         let withdrawals = 0;
 
-        parsedTransactions.forEach((tx: FMCDTransaction) => {
+        allTransactions.forEach((tx: FMCDTransaction) => {
+          // Only count completed transactions with valid amounts
           if (tx.status === FMCDTransactionStatus.Completed && tx.amount_msats > 0) {
-            if (tx.type.includes("receive") || tx.type === FMCDTransactionType.EcashMint) {
+            // Use exact enum matching instead of string includes
+            if (
+              tx.type === FMCDTransactionType.LightningReceive ||
+              tx.type === FMCDTransactionType.OnchainReceive ||
+              tx.type === FMCDTransactionType.EcashMint
+            ) {
               // Deposits: money coming in
               deposits += tx.amount_msats;
-            } else if (tx.type.includes("send") || tx.type === FMCDTransactionType.EcashSpend) {
+            } else if (
+              tx.type === FMCDTransactionType.LightningSend ||
+              tx.type === FMCDTransactionType.OnchainSend ||
+              tx.type === FMCDTransactionType.EcashSpend
+            ) {
               // Withdrawals: money going out
               withdrawals += tx.amount_msats;
             }
@@ -137,15 +166,23 @@ export function FederationTransactionHistory({
   };
 
   const getTransactionColor = (type: FMCDTransaction["type"]) => {
-    if (type.includes("receive") || type === FMCDTransactionType.EcashMint) {
+    if (
+      type === FMCDTransactionType.LightningReceive ||
+      type === FMCDTransactionType.OnchainReceive ||
+      type === FMCDTransactionType.EcashMint
+    ) {
       return "text-green-600";
-    } else if (type.includes("send") || type === FMCDTransactionType.EcashSpend) {
+    } else if (
+      type === FMCDTransactionType.LightningSend ||
+      type === FMCDTransactionType.OnchainSend ||
+      type === FMCDTransactionType.EcashSpend
+    ) {
       return "text-red-600";
     }
     return "text-muted-foreground";
   };
 
-  const getStatusBadge = (status: FMCDTransaction["status"]) => {
+  const getStatusBadge = (status: FMCDTransactionStatus) => {
     switch (status) {
       case FMCDTransactionStatus.Completed:
         return (
@@ -397,9 +434,9 @@ export function FederationTransactionHistory({
                 <p className="text-xs sm:text-sm font-medium text-green-900 dark:text-green-100">
                   Total Deposits
                 </p>
-                <p className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
-                  +<AmountDisplayInline msats={totalDeposits} amountOnly />
-                </p>
+                <div className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
+                  +<AmountDisplayInline msats={totalDeposits} />
+                </div>
               </div>
             </div>
 
@@ -411,9 +448,9 @@ export function FederationTransactionHistory({
                 <p className="text-xs sm:text-sm font-medium text-red-900 dark:text-red-100">
                   Total Withdrawals
                 </p>
-                <p className="text-sm sm:text-lg font-bold text-red-600 dark:text-red-400">
-                  -<AmountDisplayInline msats={totalWithdrawals} amountOnly />
-                </p>
+                <div className="text-sm sm:text-lg font-bold text-red-600 dark:text-red-400">
+                  -<AmountDisplayInline msats={totalWithdrawals} />
+                </div>
               </div>
             </div>
 
@@ -425,7 +462,7 @@ export function FederationTransactionHistory({
                 <p className="text-xs sm:text-sm font-medium text-blue-900 dark:text-blue-100">
                   Net Change
                 </p>
-                <p
+                <div
                   className={`text-sm sm:text-lg font-bold ${
                     totalDeposits - totalWithdrawals >= 0
                       ? "text-green-600 dark:text-green-400"
@@ -435,9 +472,8 @@ export function FederationTransactionHistory({
                   {totalDeposits - totalWithdrawals >= 0 ? "+" : ""}
                   <AmountDisplayInline
                     msats={Math.abs(totalDeposits - totalWithdrawals)}
-                    amountOnly
                   />
-                </p>
+                </div>
               </div>
             </div>
           </div>
@@ -503,24 +539,17 @@ export function FederationTransactionHistory({
                       </div>
                       <div className="flex items-center space-x-2 flex-shrink-0">
                         <div className="text-right">
-                          <p
+                          <div
                             className={`text-sm font-medium ${transaction.amount_msats === 0 ? "text-muted-foreground" : getTransactionColor(transaction.type)}`}
                           >
                             {transaction.amount_msats === 0 ? (
                               "—"
                             ) : (
-                              <>
-                                {transaction.type.includes("receive") ||
-                                transaction.type === FMCDTransactionType.EcashMint
-                                  ? "+"
-                                  : "-"}
-                                <AmountDisplayInline
+                              <AmountDisplayInline
                                   msats={Math.abs(transaction.amount_msats)}
-                                  amountOnly
                                 />
-                              </>
                             )}
-                          </p>
+                          </div>
                         </div>
                         <div className="flex-shrink-0">
                           {isExpanded ? (

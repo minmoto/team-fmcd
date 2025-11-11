@@ -77,9 +77,17 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
   };
 
   const getTransactionColor = (type: FMCDTransaction["type"]) => {
-    if (type.includes("receive") || type === FMCDTransactionType.EcashMint) {
+    if (
+      type === FMCDTransactionType.LightningReceive ||
+      type === FMCDTransactionType.OnchainReceive ||
+      type === FMCDTransactionType.EcashMint
+    ) {
       return "text-green-600";
-    } else if (type.includes("send") || type === FMCDTransactionType.EcashSpend) {
+    } else if (
+      type === FMCDTransactionType.LightningSend ||
+      type === FMCDTransactionType.OnchainSend ||
+      type === FMCDTransactionType.EcashSpend
+    ) {
       return "text-red-600";
     }
     return "text-muted-foreground";
@@ -198,7 +206,8 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
                         <div
                           className={`text-sm font-medium whitespace-nowrap ${getTransactionColor(transaction.type)}`}
                         >
-                          {transaction.type.includes("receive") ||
+                          {transaction.type === FMCDTransactionType.LightningReceive ||
+                          transaction.type === FMCDTransactionType.OnchainReceive ||
                           transaction.type === FMCDTransactionType.EcashMint
                             ? "+"
                             : "-"}

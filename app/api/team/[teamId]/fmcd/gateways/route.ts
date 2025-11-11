@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stackServerApp } from "@/stack";
+import { authenticateFMCDRequest, fmcdRequest } from "@/lib/fmcd/utils";
 
 interface GatewayRequest {
   federationId: string;
@@ -8,50 +8,29 @@ interface GatewayRequest {
 export async function POST(req: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
     const { teamId } = await context.params;
-    const user = await stackServerApp.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authResult = await authenticateFMCDRequest(teamId);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    const team = await stackServerApp.getTeam(teamId);
-    if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
-    }
-
-    const fmcdConfig = team.serverMetadata?.fmcdConfig as any;
-    if (!fmcdConfig?.isActive || !fmcdConfig?.baseUrl || !fmcdConfig?.password) {
-      return NextResponse.json({ error: "FMCD not configured for this team" }, { status: 400 });
-    }
+    const { config } = authResult.data;
 
     const body: GatewayRequest = await req.json();
     const { federationId } = body;
 
-    // Call FMCD to get gateways
-    const fmcdUrl = `${fmcdConfig.baseUrl}/v2/ln/gateways`;
-    const fmcdResponse = await fetch(fmcdUrl, {
+    const response = await fmcdRequest<any>({
+      endpoint: "/v2/ln/gateways",
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(`fmcd:${fmcdConfig.password}`).toString("base64")}`,
-      },
-      body: JSON.stringify({
-        federationId: federationId,
-      }),
+      body: { federationId },
+      config,
     });
 
-    if (!fmcdResponse.ok) {
-      const errorText = await fmcdResponse.text();
-      console.error("FMCD gateways error:", fmcdResponse.status, errorText);
-      return NextResponse.json(
-        { error: `FMCD error: ${fmcdResponse.status} - ${errorText}` },
-        { status: fmcdResponse.status }
-      );
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: response.status });
     }
 
-    const gateways = await fmcdResponse.json();
-
-    return NextResponse.json(gateways);
+    return NextResponse.json(response.data);
   } catch (error: any) {
     console.error("Gateway fetch error:", error);
     return NextResponse.json(
