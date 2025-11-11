@@ -3,6 +3,21 @@ export enum TransactionChannel {
   Bitcoin = "bitcoin",
 }
 
+export enum Timeframe {
+  Day = "day",
+  Week = "week",
+  Month = "month",
+}
+
+export const TIMEFRAME_PERIOD_OPTIONS = {
+  [Timeframe.Day]: [7, 14, 30, 60, 90, 120, "all"] as const,
+  [Timeframe.Week]: [2, 4, 8, 16, 32, "all"] as const,
+  [Timeframe.Month]: [2, 4, 6, 12, "all"] as const,
+} as const;
+
+export type TimeframePeriodOption<T extends Timeframe> =
+  (typeof TIMEFRAME_PERIOD_OPTIONS)[T][number];
+
 export interface FMCDConfiguration {
   teamId: string;
   baseUrl: string;

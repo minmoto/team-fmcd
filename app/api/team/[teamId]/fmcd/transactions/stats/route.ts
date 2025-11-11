@@ -1,6 +1,11 @@
 import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
-import { FMCDTransaction, FMCDTransactionType, FMCDTransactionStatus } from "@/lib/types/fmcd";
+import {
+  FMCDTransaction,
+  FMCDTransactionType,
+  FMCDTransactionStatus,
+  Timeframe,
+} from "@/lib/types/fmcd";
 import { getTeamConfig } from "@/lib/storage/team-storage";
 import { fmcdRequest, fetchFederationTransactions } from "@/lib/fmcd/utils";
 import {
@@ -34,7 +39,7 @@ interface TransactionStats {
 interface StatsResponse {
   federationId: string;
   federationName?: string;
-  timeframe: "day" | "week" | "month";
+  timeframe: Timeframe;
   stats: TransactionStats[];
   summary: {
     totalTransactions: number;
@@ -48,7 +53,7 @@ interface StatsResponse {
 // Helper function to aggregate transactions by time periods
 function aggregateTransactionsByPeriod(
   transactions: FMCDTransaction[],
-  timeframe: "day" | "week" | "month",
+  timeframe: Timeframe,
   periods: number | "all" = 30
 ): TransactionStats[] {
   const now = new Date();
@@ -68,12 +73,12 @@ function aggregateTransactionsByPeriod(
 
     // Calculate the number of periods needed to cover all transactions
     let periodCount: number;
-    if (timeframe === "day") {
+    if (timeframe === Timeframe.Day) {
       periodCount =
         Math.ceil(
           (now.getTime() - earliestTransaction.timestamp.getTime()) / (1000 * 60 * 60 * 24)
         ) + 1;
-    } else if (timeframe === "week") {
+    } else if (timeframe === Timeframe.Week) {
       periodCount =
         Math.ceil(
           (now.getTime() - earliestTransaction.timestamp.getTime()) / (1000 * 60 * 60 * 24 * 7)
@@ -96,11 +101,11 @@ function aggregateTransactionsByPeriod(
     let periodEnd: Date;
     let periodLabel: string;
 
-    if (timeframe === "day") {
+    if (timeframe === Timeframe.Day) {
       periodStart = startOfDay(subDays(now, i));
       periodEnd = endOfDay(periodStart);
       periodLabel = format(periodStart, "yyyy-MM-dd");
-    } else if (timeframe === "week") {
+    } else if (timeframe === Timeframe.Week) {
       periodStart = startOfWeek(subWeeks(now, i));
       periodEnd = endOfDay(subDays(periodStart, -6)); // End of week
       periodLabel = `${format(periodStart, "MMM dd")} - ${format(endOfDay(subDays(periodStart, -6)), "MMM dd")}`;
@@ -171,7 +176,10 @@ function aggregateTransactionsByPeriod(
       }
     });
 
-    stats.push(periodStats);
+    // Only include periods that have transactions (unless we want to show empty periods for context)
+    if (periodStats.totalTransactions > 0) {
+      stats.push(periodStats);
+    }
   }
 
   return stats;
@@ -182,7 +190,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     const params = await context.params;
     const { searchParams } = new URL(request.url);
     const federationId = searchParams.get("federationId");
-    const timeframe = (searchParams.get("timeframe") || "day") as "day" | "week" | "month";
+    const timeframe = (searchParams.get("timeframe") || "day") as Timeframe;
     const periodsParam = searchParams.get("periods") || "30";
     const periods = periodsParam === "all" ? "all" : Math.min(parseInt(periodsParam), 90);
 
@@ -236,7 +244,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     const transactions = await fetchFederationTransactions({
       federationId,
       config,
-      limit: 1000,
+      limit: 100_000_000_000,
       timeoutMs: 10000,
     });
 

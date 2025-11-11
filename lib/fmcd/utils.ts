@@ -320,28 +320,33 @@ export async function fetchFederationTransactions({
   timeoutMs = 5000,
 }: FetchTransactionsOptions): Promise<any[]> {
   try {
-    console.log(`[FMCD Debug] Fetching operations for federation ${federationId} with limit ${limit}`);
-    
+    console.log(
+      `[FMCD Debug] Fetching operations for federation ${federationId} with limit ${limit}`
+    );
+
     // Try multiple API approaches to get operations with outcomes
     const approaches = [
       // Approach 1: Standard request with higher limit
-      { 
-        federationId, 
+      {
+        federationId,
         limit: Math.max(limit, 100),
-        include_completed: true // Try parameter for completed operations
+        include_completed: true, // Try parameter for completed operations
       },
-      // Approach 2: Request with different parameters  
-      { 
-        federationId, 
-        limit: Math.max(limit, 100)
-      }
+      // Approach 2: Request with different parameters
+      {
+        federationId,
+        limit: Math.max(limit, 100),
+      },
     ];
 
     let response;
-    
+
     for (let i = 0; i < approaches.length; i++) {
       const requestBody = approaches[i];
-      console.log(`[FMCD Debug] Trying approach ${i + 1} with body:`, JSON.stringify(requestBody, null, 2));
+      console.log(
+        `[FMCD Debug] Trying approach ${i + 1} with body:`,
+        JSON.stringify(requestBody, null, 2)
+      );
 
       response = await fmcdRequest<any>({
         endpoint: "/v2/admin/operations",
@@ -358,21 +363,25 @@ export async function fetchFederationTransactions({
       }
 
       if (response.data && response.data.operations) {
-        console.log(`[FMCD Debug] Approach ${i + 1} succeeded, got ${response.data.operations.length} operations`);
+        console.log(
+          `[FMCD Debug] Approach ${i + 1} succeeded, got ${response.data.operations.length} operations`
+        );
         break;
       }
     }
 
-    if (response.error || !response.data) {
+    if (!response || response.error || !response.data) {
       console.warn(
-        `Failed to fetch transactions for federation ${federationId}: ${response.error}`
+        `Failed to fetch transactions for federation ${federationId}: ${response?.error || "No response"}`
       );
       return [];
     }
 
     const operations = response.data.operations || [];
 
-    console.log(`[FMCD Debug] Found ${operations.length} operations for federation ${federationId}`);
+    console.log(
+      `[FMCD Debug] Found ${operations.length} operations for federation ${federationId}`
+    );
 
     return operations.map((op: any, index: number) => {
       let amountMsats = 0;
@@ -437,7 +446,7 @@ export async function fetchFederationTransactions({
         outcomeValue: op.outcome,
         outcomeKeys: op.outcome && typeof op.outcome === "object" ? Object.keys(op.outcome) : null,
         creationTime: op.creationTime,
-        operationKind: op.operationKind
+        operationKind: op.operationKind,
       });
 
       if (op.outcome) {
@@ -445,19 +454,31 @@ export async function fetchFederationTransactions({
           // Handle string-based outcomes
           const outcomeStr = op.outcome.toLowerCase();
           console.log(`[FMCD Debug] String outcome: "${outcomeStr}"`);
-          if (outcomeStr === "claimed" || outcomeStr === "success" || outcomeStr === "completed" || outcomeStr === "settled") {
+          if (
+            outcomeStr === "claimed" ||
+            outcomeStr === "success" ||
+            outcomeStr === "completed" ||
+            outcomeStr === "settled"
+          ) {
             status = FMCDTransactionStatus.Completed;
-          } else if (outcomeStr === "failed" || outcomeStr === "canceled" || outcomeStr === "cancelled" || outcomeStr === "timeout") {
+          } else if (
+            outcomeStr === "failed" ||
+            outcomeStr === "canceled" ||
+            outcomeStr === "cancelled" ||
+            outcomeStr === "timeout"
+          ) {
             status = FMCDTransactionStatus.Failed;
           } else {
             // Unknown string outcome, default to pending
-            console.log(`[FMCD Debug] Unknown string outcome: ${outcomeStr}, defaulting to pending`);
+            console.log(
+              `[FMCD Debug] Unknown string outcome: ${outcomeStr}, defaulting to pending`
+            );
             status = FMCDTransactionStatus.Pending;
           }
         } else if (typeof op.outcome === "object" && op.outcome !== null) {
           // Handle object-based outcomes
           console.log(`[FMCD Debug] Object outcome keys:`, Object.keys(op.outcome));
-          
+
           // Check for completed/success indicators (case-sensitive keys)
           const isCompleted = !!(
             op.outcome.Claimed ||
@@ -469,7 +490,7 @@ export async function fetchFederationTransactions({
             op.outcome.settled ||
             op.outcome.Settled
           );
-          
+
           // Check for failure indicators
           const isFailed = !!(
             op.outcome.canceled ||
@@ -487,9 +508,12 @@ export async function fetchFederationTransactions({
           } else if (isFailed) {
             status = FMCDTransactionStatus.Failed;
           } else {
-            // If outcome object exists but doesn't match known patterns, 
+            // If outcome object exists but doesn't match known patterns,
             // it could be a custom status or pending operation. Default to pending.
-            console.log(`[FMCD Debug] Unknown object outcome structure, defaulting to pending:`, op.outcome);
+            console.log(
+              `[FMCD Debug] Unknown object outcome structure, defaulting to pending:`,
+              op.outcome
+            );
             status = FMCDTransactionStatus.Pending;
           }
         } else {
@@ -498,26 +522,32 @@ export async function fetchFederationTransactions({
       } else {
         // No outcome present - apply intelligent fallback logic
         // Based on operation age and type, make educated guesses
-        
+
         const operationDate = new Date(op.creationTime);
         const ageInMinutes = (Date.now() - operationDate.getTime()) / (1000 * 60);
         const ageInDays = ageInMinutes / (60 * 24);
-        
-        console.log(`[FMCD Debug] No outcome for operation ${index}, age: ${ageInDays.toFixed(1)} days (${ageInMinutes.toFixed(0)} minutes)`);
-        
+
+        console.log(
+          `[FMCD Debug] No outcome for operation ${index}, age: ${ageInDays.toFixed(1)} days (${ageInMinutes.toFixed(0)} minutes)`
+        );
+
         // Heuristic: Operations older than 1 hour are likely completed or failed
         // Lightning operations usually complete quickly (within minutes)
         // Onchain operations might take longer but still shouldn't be pending for days/weeks
-        
+
         if (ageInDays > 7) {
           // Operations older than 7 days with no outcome are likely completed
           // If they failed, they would typically have an outcome indicating failure
           status = FMCDTransactionStatus.Completed;
-          console.log(`[FMCD Debug] Old operation (${ageInDays.toFixed(1)} days), assuming completed`);
+          console.log(
+            `[FMCD Debug] Old operation (${ageInDays.toFixed(1)} days), assuming completed`
+          );
         } else if (ageInMinutes > 60) {
           // Operations older than 1 hour are likely completed
           status = FMCDTransactionStatus.Completed;
-          console.log(`[FMCD Debug] Operation older than 1 hour (${ageInMinutes.toFixed(0)} minutes), assuming completed`);
+          console.log(
+            `[FMCD Debug] Operation older than 1 hour (${ageInMinutes.toFixed(0)} minutes), assuming completed`
+          );
         } else if (ageInMinutes > 10 && op.operationKind === "ln") {
           // Lightning operations older than 10 minutes are likely completed or failed
           // Since we have no failure outcome, assume completed
@@ -530,7 +560,9 @@ export async function fetchFederationTransactions({
         }
       }
 
-      console.log(`[FMCD Debug] Operation ${index} final: type=${type}, amount=${amountMsats}msats, status=${status}`);
+      console.log(
+        `[FMCD Debug] Operation ${index} final: type=${type}, amount=${amountMsats}msats, status=${status}`
+      );
 
       const transaction = {
         id: op.id?.toString() || `${federationId}-${Date.now()}-${Math.random()}`,
