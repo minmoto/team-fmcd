@@ -210,7 +210,6 @@ function HeaderBreadcrumb(props: {
   basePath: string;
 }) {
   const segment = useSegment(props.basePath);
-  console.log(segment);
   const item = props.items.find(item => item.type === "item" && item.href === segment);
   const title: string | undefined = (item as any)?.name;
 

@@ -2,7 +2,7 @@ import { stackServerApp } from "@/stack";
 import { NextRequest, NextResponse } from "next/server";
 import { FMCDTransaction, FMCDTransactionType, FMCDTransactionStatus } from "@/lib/types/fmcd";
 import { getTeamConfig } from "@/lib/storage/team-storage";
-import { fmcdRequest, ensureNumber } from "@/lib/fmcd/utils";
+import { fmcdRequest, fetchFederationTransactions } from "@/lib/fmcd/utils";
 import {
   format,
   startOfDay,
@@ -45,149 +45,53 @@ interface StatsResponse {
   };
 }
 
-// Helper function to extract amount from Lightning invoice
-function extractAmountFromInvoice(invoice: string): number {
-  try {
-    const match = invoice.match(/ln(bc|tb|tbs|bcrt)(\d+)([munp]?)/);
-    if (!match) return 0;
-
-    const amount = parseInt(match[2]);
-    const unit = match[3];
-
-    switch (unit) {
-      case "m":
-        return amount * 100000000;
-      case "u":
-        return amount * 100000;
-      case "n":
-        return Math.floor(amount * 100);
-      case "p":
-        return Math.floor(amount / 10);
-      default:
-        return amount * 100000000000;
-    }
-  } catch (error) {
-    return 0;
-  }
-}
-
-// Helper function to fetch all transactions for a federation
-async function fetchAllFederationTransactions(
-  federationId: string,
-  config: any
-): Promise<FMCDTransaction[]> {
-  try {
-    const response = await fmcdRequest<any>({
-      endpoint: "/v2/admin/operations",
-      method: "POST",
-      body: { federationId, limit: 1000 }, // Fetch up to 1000 transactions
-      config,
-      maxRetries: 2,
-      timeoutMs: 10000,
-    });
-
-    if (response.error || !response.data) {
-      console.warn(
-        `Failed to fetch transactions for federation ${federationId}: ${response.error}`
-      );
-      return [];
-    }
-
-    const operations = response.data.operations || [];
-    return operations.map((op: any) => {
-      let amountMsats = 0;
-      let type: FMCDTransaction["type"] = FMCDTransactionType.EcashMint;
-      let status: FMCDTransaction["status"] = FMCDTransactionStatus.Pending;
-
-      // Determine transaction type and amount
-      if (op.operationKind === "ln") {
-        if (op.operationMeta?.variant?.receive) {
-          type = FMCDTransactionType.LightningReceive;
-          const invoice = op.operationMeta.variant.receive.invoice;
-          if (invoice) amountMsats = extractAmountFromInvoice(invoice);
-        } else if (op.operationMeta?.variant?.pay) {
-          type = FMCDTransactionType.LightningSend;
-          const invoice = op.operationMeta.variant.pay.invoice;
-          if (invoice) amountMsats = extractAmountFromInvoice(invoice);
-        } else if (op.operationMeta?.variant?.send) {
-          type = FMCDTransactionType.LightningSend;
-          const invoice = op.operationMeta.variant.send?.invoice;
-          if (invoice) amountMsats = extractAmountFromInvoice(invoice);
-        }
-
-        if (amountMsats === 0) {
-          if (op.operationMeta?.amount_msat) {
-            amountMsats = ensureNumber(op.operationMeta.amount_msat);
-          } else if (op.outcome?.amount_msat) {
-            amountMsats = ensureNumber(op.outcome.amount_msat);
-          }
-        }
-      } else if (op.operationKind === "wallet") {
-        if (op.operationMeta?.variant?.deposit) {
-          type = FMCDTransactionType.OnchainReceive;
-          if (op.outcome?.Claimed?.btc_deposited) {
-            amountMsats = op.outcome.Claimed.btc_deposited * 1000;
-          }
-        } else if (op.operationMeta?.variant?.withdraw) {
-          type = FMCDTransactionType.OnchainSend;
-          if (op.operationMeta?.amount_sat) {
-            amountMsats = ensureNumber(op.operationMeta.amount_sat) * 1000;
-          } else if (op.operationMeta?.variant?.withdraw?.amount_sat) {
-            amountMsats = ensureNumber(op.operationMeta.variant.withdraw.amount_sat) * 1000;
-          }
-        }
-      }
-
-      // Determine status based on outcome
-      if (op.outcome) {
-        if (typeof op.outcome === "string") {
-          // Handle string outcomes like "claimed"
-          status =
-            op.outcome === "claimed"
-              ? FMCDTransactionStatus.Completed
-              : FMCDTransactionStatus.Failed;
-        } else if (typeof op.outcome === "object") {
-          // Handle object outcomes like { canceled: { reason: 'timeout' } } or { Claimed: ... }
-          if (op.outcome.Claimed) {
-            status = FMCDTransactionStatus.Completed;
-          } else if (op.outcome.canceled || op.outcome.failed) {
-            status = FMCDTransactionStatus.Failed;
-          } else {
-            // Unknown object outcome, default to failed
-            status = FMCDTransactionStatus.Failed;
-          }
-        }
-      } else {
-        // No outcome means pending
-        status = FMCDTransactionStatus.Pending;
-      }
-
-      return {
-        id: op.id?.toString() || `${federationId}-${Date.now()}-${Math.random()}`,
-        type,
-        amount_msats: amountMsats,
-        timestamp: op.creationTime ? new Date(op.creationTime) : new Date(),
-        status,
-        federation_id: federationId,
-        description: op.operationMeta?.description || op.operationKind || "Transaction",
-      } as FMCDTransaction;
-    });
-  } catch (error) {
-    console.warn(`Error fetching transactions for federation ${federationId}:`, error);
-    return [];
-  }
-}
-
 // Helper function to aggregate transactions by time periods
 function aggregateTransactionsByPeriod(
   transactions: FMCDTransaction[],
   timeframe: "day" | "week" | "month",
-  periods: number = 30
+  periods: number | "all" = 30
 ): TransactionStats[] {
   const now = new Date();
   const stats: TransactionStats[] = [];
 
-  for (let i = periods - 1; i >= 0; i--) {
+  // Handle "all" periods case - process all transactions without time windowing
+  if (periods === "all") {
+    if (transactions.length === 0) {
+      return [];
+    }
+
+    // Sort transactions by timestamp to get the earliest
+    const sortedTransactions = [...transactions].sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+    );
+    const earliestTransaction = sortedTransactions[0];
+
+    // Calculate the number of periods needed to cover all transactions
+    let periodCount: number;
+    if (timeframe === "day") {
+      periodCount =
+        Math.ceil(
+          (now.getTime() - earliestTransaction.timestamp.getTime()) / (1000 * 60 * 60 * 24)
+        ) + 1;
+    } else if (timeframe === "week") {
+      periodCount =
+        Math.ceil(
+          (now.getTime() - earliestTransaction.timestamp.getTime()) / (1000 * 60 * 60 * 24 * 7)
+        ) + 1;
+    } else {
+      // Approximate month calculation
+      periodCount =
+        Math.ceil(
+          (now.getTime() - earliestTransaction.timestamp.getTime()) / (1000 * 60 * 60 * 24 * 30)
+        ) + 1;
+    }
+
+    // Use the calculated period count for processing
+    periods = Math.max(1, periodCount);
+  }
+
+  const numPeriods = typeof periods === "number" ? periods : 30;
+  for (let i = numPeriods - 1; i >= 0; i--) {
     let periodStart: Date;
     let periodEnd: Date;
     let periodLabel: string;
@@ -279,7 +183,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     const { searchParams } = new URL(request.url);
     const federationId = searchParams.get("federationId");
     const timeframe = (searchParams.get("timeframe") || "day") as "day" | "week" | "month";
-    const periods = Math.min(parseInt(searchParams.get("periods") || "30"), 90);
+    const periodsParam = searchParams.get("periods") || "30";
+    const periods = periodsParam === "all" ? "all" : Math.min(parseInt(periodsParam), 90);
 
     if (!federationId) {
       return NextResponse.json({ error: "Federation ID is required" }, { status: 400 });
@@ -328,7 +233,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
       federationInfo.meta?.federation_name || `Federation ${federationId.slice(0, 8)}`;
 
     // Fetch all transactions for the federation
-    const transactions = await fetchAllFederationTransactions(federationId, config);
+    const transactions = await fetchFederationTransactions({
+      federationId,
+      config,
+      limit: 1000,
+      timeoutMs: 10000,
+    });
 
     // Aggregate transactions by the specified timeframe
     const stats = aggregateTransactionsByPeriod(transactions, timeframe, periods);
@@ -336,7 +246,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     // Calculate summary statistics
     const totalTransactions = stats.reduce((sum, stat) => sum + stat.totalTransactions, 0);
     const totalVolumeMsats = stats.reduce((sum, stat) => sum + stat.totalVolumeMsats, 0);
-    const avgVolumePerPeriod = periods > 0 ? totalVolumeMsats / periods : 0;
+    const periodCount = typeof periods === "number" ? periods : stats.length;
+    const avgVolumePerPeriod = periodCount > 0 ? totalVolumeMsats / periodCount : 0;
 
     const totalCompleted = stats.reduce((sum, stat) => sum + stat.completedTransactions, 0);
     const totalFailed = stats.reduce((sum, stat) => sum + stat.failedTransactions, 0);
@@ -376,7 +287,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ tea
     };
 
     console.log(
-      `[FMCD Transaction Stats] Generated stats for federation ${federationId} with ${totalTransactions} transactions over ${periods} ${timeframe}s`
+      `[FMCD Transaction Stats] Generated stats for federation ${federationId} with ${totalTransactions} transactions over ${periods === "all" ? "all" : periods} ${timeframe}s`
     );
 
     return NextResponse.json(response);

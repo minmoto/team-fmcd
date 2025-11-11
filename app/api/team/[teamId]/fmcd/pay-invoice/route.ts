@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stackServerApp } from "@/stack";
+import { authenticateFMCDRequest, fmcdRequest } from "@/lib/fmcd/utils";
 
 interface PayInvoiceRequest {
   federationId: string;
@@ -10,21 +10,13 @@ interface PayInvoiceRequest {
 export async function POST(req: NextRequest, context: { params: Promise<{ teamId: string }> }) {
   try {
     const { teamId } = await context.params;
-    const user = await stackServerApp.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authResult = await authenticateFMCDRequest(teamId);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    const team = await stackServerApp.getTeam(teamId);
-    if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
-    }
-
-    const fmcdConfig = team.serverMetadata?.fmcdConfig as any;
-    if (!fmcdConfig?.isActive || !fmcdConfig?.baseUrl || !fmcdConfig?.password) {
-      return NextResponse.json({ error: "FMCD not configured for this team" }, { status: 400 });
-    }
+    const { config } = authResult.data;
 
     const body: PayInvoiceRequest = await req.json();
     const { federationId, invoice, allowOverpay } = body;
@@ -34,33 +26,22 @@ export async function POST(req: NextRequest, context: { params: Promise<{ teamId
       return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 });
     }
 
-    // Call FMCD to pay the invoice from the source federation
-    const fmcdUrl = `${fmcdConfig.baseUrl}/v2/ln/pay`;
-    const fmcdResponse = await fetch(fmcdUrl, {
+    const response = await fmcdRequest<any>({
+      endpoint: "/v2/ln/pay",
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(`fmcd:${fmcdConfig.password}`).toString("base64")}`,
-      },
-      body: JSON.stringify({
+      body: {
         federationId,
         paymentRequest: invoice,
         allowOverpay: allowOverpay || false,
-      }),
+      },
+      config,
     });
 
-    if (!fmcdResponse.ok) {
-      const errorText = await fmcdResponse.text();
-      console.error("FMCD payment error:", fmcdResponse.status, errorText);
-      return NextResponse.json(
-        { error: `Payment failed: ${fmcdResponse.status} - ${errorText}` },
-        { status: fmcdResponse.status }
-      );
+    if (response.error) {
+      return NextResponse.json({ error: response.error }, { status: response.status });
     }
 
-    const result = await fmcdResponse.json();
-
-    return NextResponse.json(result);
+    return NextResponse.json(response.data);
   } catch (error: any) {
     console.error("Payment error:", error);
     return NextResponse.json(

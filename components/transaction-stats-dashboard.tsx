@@ -104,7 +104,7 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<"day" | "week" | "month">("day");
-  const [periods, setPeriods] = useState(30);
+  const [periods, setPeriods] = useState<number | "all">(30);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
@@ -286,7 +286,10 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
                 <SelectItem value="month">Monthly</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={periods.toString()} onValueChange={value => setPeriods(parseInt(value))}>
+            <Select
+              value={periods.toString()}
+              onValueChange={value => setPeriods(value === "all" ? "all" : parseInt(value))}
+            >
               <SelectTrigger className="w-full sm:w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -296,6 +299,7 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
                 <SelectItem value="30">30</SelectItem>
                 <SelectItem value="60">60</SelectItem>
                 <SelectItem value="90">90</SelectItem>
+                <SelectItem value="all">All</SelectItem>
               </SelectContent>
             </Select>
           </div>
