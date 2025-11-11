@@ -180,43 +180,48 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
             {transactions.map(transaction => (
               <div
                 key={transaction.id}
-                className="flex items-center justify-between space-x-3 p-2 rounded-lg hover:bg-muted/50"
+                className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">{getTransactionIcon(transaction.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                <div className="flex-shrink-0 mt-0.5">{getTransactionIcon(transaction.type)}</div>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <p className="text-sm font-medium truncate">
                         {getTransactionDescription(transaction)}
                       </p>
-                      {getStatusBadge(transaction.status)}
+                      <div className="hidden sm:block">{getStatusBadge(transaction.status)}</div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span title={transaction.federation_id}>
-                        Federation: {transaction.federation_id?.slice(0, 8)}...
-                      </span>
-                      <span>•</span>
-                      <span title={transaction.timestamp.toLocaleString()}>
-                        {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
-                      </span>
+                    <div className="flex-shrink-0 text-right">
+                      {transaction.amount_msats === 0 ? (
+                        <p className="text-sm font-medium text-muted-foreground">-</p>
+                      ) : (
+                        <div
+                          className={`text-sm font-medium whitespace-nowrap ${getTransactionColor(transaction.type)}`}
+                        >
+                          {transaction.type.includes("receive") ||
+                          transaction.type === FMCDTransactionType.EcashMint
+                            ? "+"
+                            : "-"}
+                          <AmountDisplayInline
+                            msats={Math.abs(transaction.amount_msats)}
+                            className="inline"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-                <div className="flex-shrink-0 text-right">
-                  {transaction.amount_msats === 0 ? (
-                    <p className="text-sm font-medium text-muted-foreground">-</p>
-                  ) : (
-                    <div className={`text-sm font-medium ${getTransactionColor(transaction.type)}`}>
-                      {transaction.type.includes("receive") ||
-                      transaction.type === FMCDTransactionType.EcashMint
-                        ? "+"
-                        : "-"}
-                      <AmountDisplayInline
-                        msats={Math.abs(transaction.amount_msats)}
-                        className="inline"
-                      />
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span title={transaction.federation_id}>
+                        Federation: {transaction.federation_id?.slice(0, 6)}...
+                      </span>
+                      <div className="sm:hidden">{getStatusBadge(transaction.status)}</div>
                     </div>
-                  )}
+                    <span className="hidden sm:inline">•</span>
+                    <span title={transaction.timestamp.toLocaleString()}>
+                      {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

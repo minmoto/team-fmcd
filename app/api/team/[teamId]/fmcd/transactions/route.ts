@@ -85,9 +85,6 @@ async function fetchFederationTransactions(
       let status: FMCDTransaction["status"] = FMCDTransactionStatus.Pending;
       let address: string | undefined;
 
-      console.log("OPERATIONS");
-      console.log(op);
-
       // Determine transaction type and amount
       if (op.operationKind === "ln") {
         // Lightning operations
@@ -146,18 +143,28 @@ async function fetchFederationTransactions(
         }
       }
 
-      // Determine status
+      // Determine status based on outcome
       if (op.outcome) {
         if (typeof op.outcome === "string") {
+          // Handle string outcomes like "claimed"
           status =
             op.outcome === "claimed"
               ? FMCDTransactionStatus.Completed
               : FMCDTransactionStatus.Failed;
-        } else if (op.outcome.Claimed) {
-          status = FMCDTransactionStatus.Completed;
-        } else if (op.outcome.canceled || op.outcome.failed) {
-          status = FMCDTransactionStatus.Failed;
+        } else if (typeof op.outcome === "object") {
+          // Handle object outcomes like { canceled: { reason: 'timeout' } } or { Claimed: ... }
+          if (op.outcome.Claimed) {
+            status = FMCDTransactionStatus.Completed;
+          } else if (op.outcome.canceled || op.outcome.failed) {
+            status = FMCDTransactionStatus.Failed;
+          } else {
+            // Unknown object outcome, default to failed
+            status = FMCDTransactionStatus.Failed;
+          }
         }
+      } else {
+        // No outcome means pending
+        status = FMCDTransactionStatus.Pending;
       }
 
       const transaction = {
