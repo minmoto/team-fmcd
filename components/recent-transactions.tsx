@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, ArrowUpRight, ArrowDownLeft, Zap, Bitcoin, Ticket } from "lucide-react";
-import { FMCDTransaction } from "@/lib/types/fmcd";
+import { FMCDTransaction, FMCDTransactionType, FMCDTransactionStatus } from "@/lib/types/fmcd";
 import { formatDistanceToNow } from "date-fns";
 import { AmountDisplayInline } from "@/components/amount-display";
 
@@ -59,17 +59,17 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
 
   const getTransactionIcon = (type: FMCDTransaction["type"]) => {
     switch (type) {
-      case "lightning_receive":
+      case FMCDTransactionType.LightningReceive:
         return <ArrowDownLeft className="h-4 w-4 text-green-500" />;
-      case "lightning_send":
+      case FMCDTransactionType.LightningSend:
         return <ArrowUpRight className="h-4 w-4 text-orange-500" />;
-      case "onchain_receive":
+      case FMCDTransactionType.OnchainReceive:
         return <ArrowDownLeft className="h-4 w-4 text-green-500" />;
-      case "onchain_send":
+      case FMCDTransactionType.OnchainSend:
         return <ArrowUpRight className="h-4 w-4 text-orange-500" />;
-      case "ecash_mint":
+      case FMCDTransactionType.EcashMint:
         return <ArrowDownLeft className="h-4 w-4 text-green-500" />;
-      case "ecash_spend":
+      case FMCDTransactionType.EcashSpend:
         return <ArrowUpRight className="h-4 w-4 text-orange-500" />;
       default:
         return <ArrowUpRight className="h-4 w-4 text-muted-foreground" />;
@@ -77,9 +77,9 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
   };
 
   const getTransactionColor = (type: FMCDTransaction["type"]) => {
-    if (type.includes("receive") || type === "ecash_mint") {
+    if (type.includes("receive") || type === FMCDTransactionType.EcashMint) {
       return "text-green-600";
-    } else if (type.includes("send") || type === "ecash_spend") {
+    } else if (type.includes("send") || type === FMCDTransactionType.EcashSpend) {
       return "text-red-600";
     }
     return "text-muted-foreground";
@@ -87,15 +87,15 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
 
   const getStatusBadge = (status: FMCDTransaction["status"]) => {
     switch (status) {
-      case "completed":
+      case FMCDTransactionStatus.Completed:
         return (
           <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
             Completed
           </Badge>
         );
-      case "pending":
+      case FMCDTransactionStatus.Pending:
         return <Badge variant="secondary">Pending</Badge>;
-      case "failed":
+      case FMCDTransactionStatus.Failed:
         return <Badge variant="destructive">Failed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -207,7 +207,8 @@ export function RecentTransactions({ className }: RecentTransactionsProps) {
                     <p className="text-sm font-medium text-muted-foreground">-</p>
                   ) : (
                     <div className={`text-sm font-medium ${getTransactionColor(transaction.type)}`}>
-                      {transaction.type.includes("receive") || transaction.type === "ecash_mint"
+                      {transaction.type.includes("receive") ||
+                      transaction.type === FMCDTransactionType.EcashMint
                         ? "+"
                         : "-"}
                       <AmountDisplayInline

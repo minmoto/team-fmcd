@@ -568,14 +568,6 @@ export function TransferFundsModal({
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex items-start space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5" />
-        <div className="text-sm text-yellow-800">
-          <p className="font-medium">Important:</p>
-          <p>This transfer cannot be undone. Make sure the destination federation is correct.</p>
-        </div>
-      </div>
     </div>
   );
 
