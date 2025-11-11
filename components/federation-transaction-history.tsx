@@ -470,9 +470,7 @@ export function FederationTransactionHistory({
                   }`}
                 >
                   {totalDeposits - totalWithdrawals >= 0 ? "+" : ""}
-                  <AmountDisplayInline
-                    msats={Math.abs(totalDeposits - totalWithdrawals)}
-                  />
+                  <AmountDisplayInline msats={Math.abs(totalDeposits - totalWithdrawals)} />
                 </div>
               </div>
             </div>
@@ -545,9 +543,7 @@ export function FederationTransactionHistory({
                             {transaction.amount_msats === 0 ? (
                               "—"
                             ) : (
-                              <AmountDisplayInline
-                                  msats={Math.abs(transaction.amount_msats)}
-                                />
+                              <AmountDisplayInline msats={Math.abs(transaction.amount_msats)} />
                             )}
                           </div>
                         </div>

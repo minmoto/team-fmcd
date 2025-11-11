@@ -43,6 +43,7 @@ import {
   PieChart as PieChartIcon,
 } from "lucide-react";
 import { AmountDisplayInline } from "@/components/amount-display";
+import { Timeframe, TIMEFRAME_PERIOD_OPTIONS } from "@/lib/types/fmcd";
 
 interface TransactionStats {
   period: string;
@@ -62,7 +63,7 @@ interface TransactionStats {
 interface StatsResponse {
   federationId: string;
   federationName?: string;
-  timeframe: "day" | "week" | "month";
+  timeframe: Timeframe;
   stats: TransactionStats[];
   summary: {
     totalTransactions: number;
@@ -103,8 +104,31 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
   const [statsData, setStatsData] = useState<StatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeframe, setTimeframe] = useState<"day" | "week" | "month">("day");
-  const [periods, setPeriods] = useState<number | "all">(30);
+  const [timeframe, setTimeframe] = useState<Timeframe>(Timeframe.Day);
+  const [periods, setPeriods] = useState<number | "all">(
+    TIMEFRAME_PERIOD_OPTIONS[Timeframe.Day][2]
+  ); // Start with 30 for Day
+
+  // Get valid period options for current timeframe
+  const getCurrentPeriodOptions = () => {
+    return TIMEFRAME_PERIOD_OPTIONS[timeframe];
+  };
+
+  // Handle timeframe change and reset periods to valid option
+  const handleTimeframeChange = (newTimeframe: Timeframe) => {
+    setTimeframe(newTimeframe);
+    // Reset to appropriate default period for new timeframe
+    const validOptions = TIMEFRAME_PERIOD_OPTIONS[newTimeframe];
+    if (newTimeframe === Timeframe.Day) {
+      setPeriods(30); // 30 days
+    } else if (newTimeframe === Timeframe.Week) {
+      setPeriods(4); // 4 weeks
+    } else if (newTimeframe === Timeframe.Month) {
+      setPeriods(6); // 6 months
+    } else {
+      setPeriods(validOptions[0]);
+    }
+  };
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
@@ -139,7 +163,7 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
   }, [teamId, federationId, timeframe, periods]);
 
   const formatPeriodLabel = (period: string) => {
-    if (timeframe === "day") {
+    if (timeframe === Timeframe.Day) {
       return new Date(period).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
     return period;
@@ -274,16 +298,16 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
           <div className="flex flex-col sm:flex-row gap-2">
             <Select
               value={timeframe}
-              onValueChange={(value: "day" | "week" | "month") => setTimeframe(value)}
+              onValueChange={(value: Timeframe) => handleTimeframeChange(value)}
             >
               <SelectTrigger className="w-full sm:w-32">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">Daily</SelectItem>
-                <SelectItem value="week">Weekly</SelectItem>
-                <SelectItem value="month">Monthly</SelectItem>
+                <SelectItem value={Timeframe.Day}>Daily</SelectItem>
+                <SelectItem value={Timeframe.Week}>Weekly</SelectItem>
+                <SelectItem value={Timeframe.Month}>Monthly</SelectItem>
               </SelectContent>
             </Select>
             <Select
@@ -294,12 +318,11 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">7</SelectItem>
-                <SelectItem value="14">14</SelectItem>
-                <SelectItem value="30">30</SelectItem>
-                <SelectItem value="60">60</SelectItem>
-                <SelectItem value="90">90</SelectItem>
-                <SelectItem value="all">All</SelectItem>
+                {getCurrentPeriodOptions().map(option => (
+                  <SelectItem key={option.toString()} value={option.toString()}>
+                    {option === "all" ? "All" : option.toString()}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -333,7 +356,14 @@ export function TransactionStatsDashboard({ federationId, className }: Transacti
             <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <div>
               <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
-                Avg Per {timeframe === "day" ? "Day" : timeframe === "week" ? "Week" : "Month"}
+                Avg Per{" "}
+                {timeframe === Timeframe.Day
+                  ? "Day"
+                  : timeframe === Timeframe.Week
+                    ? "Week"
+                    : timeframe === Timeframe.Month
+                      ? "Month"
+                      : "Period"}
               </p>
               <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
                 <AmountDisplayInline msats={statsData.summary.avgVolumePerPeriod ?? 0} amountOnly />
