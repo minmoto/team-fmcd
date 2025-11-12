@@ -324,53 +324,19 @@ export async function fetchFederationTransactions({
       `[FMCD Debug] Fetching operations for federation ${federationId} with limit ${limit}`
     );
 
-    // Try multiple API approaches to get operations with outcomes
-    const approaches = [
-      // Approach 1: Standard request with higher limit
-      {
-        federationId,
-        limit: Math.max(limit, 100),
-        include_completed: true, // Try parameter for completed operations
-      },
-      // Approach 2: Request with different parameters
-      {
+    const response = await fmcdRequest<any>({
+      endpoint: "/v2/admin/operations",
+      method: "POST",
+      body: {
         federationId,
         limit: Math.max(limit, 100),
       },
-    ];
+      config,
+      maxRetries: 2,
+      timeoutMs,
+    });
 
-    let response;
-
-    for (let i = 0; i < approaches.length; i++) {
-      const requestBody = approaches[i];
-      console.log(
-        `[FMCD Debug] Trying approach ${i + 1} with body:`,
-        JSON.stringify(requestBody, null, 2)
-      );
-
-      response = await fmcdRequest<any>({
-        endpoint: "/v2/admin/operations",
-        method: "POST",
-        body: requestBody,
-        config,
-        maxRetries: 2,
-        timeoutMs,
-      });
-
-      if (response.error) {
-        console.log(`[FMCD Debug] Approach ${i + 1} failed: ${response.error}`);
-        continue;
-      }
-
-      if (response.data && response.data.operations) {
-        console.log(
-          `[FMCD Debug] Approach ${i + 1} succeeded, got ${response.data.operations.length} operations`
-        );
-        break;
-      }
-    }
-
-    if (!response || response.error || !response.data) {
+    if (response.error || !response.data) {
       console.warn(
         `Failed to fetch transactions for federation ${federationId}: ${response?.error || "No response"}`
       );
@@ -440,67 +406,40 @@ export async function fetchFederationTransactions({
       }
 
       // Determine transaction status based on operation outcome
-      console.log(`[FMCD Debug] Operation ${index} outcome analysis:`, {
-        hasOutcome: !!op.outcome,
-        outcomeType: typeof op.outcome,
-        outcomeValue: op.outcome,
-        outcomeKeys: op.outcome && typeof op.outcome === "object" ? Object.keys(op.outcome) : null,
-        creationTime: op.creationTime,
-        operationKind: op.operationKind,
-      });
-
+      // With enhanced fmcd state machine inspection, we now get reliable outcomes
       if (op.outcome) {
         if (typeof op.outcome === "string") {
-          // Handle string-based outcomes
+          // Handle string-based outcomes from state machine inspection
           const outcomeStr = op.outcome.toLowerCase();
-          console.log(`[FMCD Debug] String outcome: "${outcomeStr}"`);
-          if (
-            outcomeStr === "claimed" ||
-            outcomeStr === "success" ||
-            outcomeStr === "completed" ||
-            outcomeStr === "settled"
-          ) {
+          if (outcomeStr === "claimed" || outcomeStr === "success" || outcomeStr === "completed") {
             status = FMCDTransactionStatus.Completed;
           } else if (
             outcomeStr === "failed" ||
             outcomeStr === "canceled" ||
-            outcomeStr === "cancelled" ||
-            outcomeStr === "timeout"
+            outcomeStr === "refunded"
           ) {
             status = FMCDTransactionStatus.Failed;
           } else {
-            // Unknown string outcome, default to pending
-            console.log(
-              `[FMCD Debug] Unknown string outcome: ${outcomeStr}, defaulting to pending`
-            );
             status = FMCDTransactionStatus.Pending;
           }
         } else if (typeof op.outcome === "object" && op.outcome !== null) {
-          // Handle object-based outcomes
-          console.log(`[FMCD Debug] Object outcome keys:`, Object.keys(op.outcome));
-
-          // Check for completed/success indicators (case-sensitive keys)
+          // Handle legacy object-based outcomes (for backward compatibility)
           const isCompleted = !!(
             op.outcome.Claimed ||
             op.outcome.Success ||
             op.outcome.Completed ||
             op.outcome.success ||
             op.outcome.completed ||
-            op.outcome.claimed ||
-            op.outcome.settled ||
-            op.outcome.Settled
+            op.outcome.claimed
           );
 
-          // Check for failure indicators
           const isFailed = !!(
             op.outcome.canceled ||
             op.outcome.failed ||
             op.outcome.Failed ||
             op.outcome.Canceled ||
-            op.outcome.cancelled ||
-            op.outcome.Cancelled ||
-            op.outcome.timeout ||
-            op.outcome.Timeout
+            op.outcome.refunded ||
+            op.outcome.Refunded
           );
 
           if (isCompleted) {
@@ -508,56 +447,14 @@ export async function fetchFederationTransactions({
           } else if (isFailed) {
             status = FMCDTransactionStatus.Failed;
           } else {
-            // If outcome object exists but doesn't match known patterns,
-            // it could be a custom status or pending operation. Default to pending.
-            console.log(
-              `[FMCD Debug] Unknown object outcome structure, defaulting to pending:`,
-              op.outcome
-            );
             status = FMCDTransactionStatus.Pending;
           }
         } else {
           status = FMCDTransactionStatus.Pending;
         }
       } else {
-        // No outcome present - apply intelligent fallback logic
-        // Based on operation age and type, make educated guesses
-
-        const operationDate = new Date(op.creationTime);
-        const ageInMinutes = (Date.now() - operationDate.getTime()) / (1000 * 60);
-        const ageInDays = ageInMinutes / (60 * 24);
-
-        console.log(
-          `[FMCD Debug] No outcome for operation ${index}, age: ${ageInDays.toFixed(1)} days (${ageInMinutes.toFixed(0)} minutes)`
-        );
-
-        // Heuristic: Operations older than 1 hour are likely completed or failed
-        // Lightning operations usually complete quickly (within minutes)
-        // Onchain operations might take longer but still shouldn't be pending for days/weeks
-
-        if (ageInDays > 7) {
-          // Operations older than 7 days with no outcome are likely completed
-          // If they failed, they would typically have an outcome indicating failure
-          status = FMCDTransactionStatus.Completed;
-          console.log(
-            `[FMCD Debug] Old operation (${ageInDays.toFixed(1)} days), assuming completed`
-          );
-        } else if (ageInMinutes > 60) {
-          // Operations older than 1 hour are likely completed
-          status = FMCDTransactionStatus.Completed;
-          console.log(
-            `[FMCD Debug] Operation older than 1 hour (${ageInMinutes.toFixed(0)} minutes), assuming completed`
-          );
-        } else if (ageInMinutes > 10 && op.operationKind === "ln") {
-          // Lightning operations older than 10 minutes are likely completed or failed
-          // Since we have no failure outcome, assume completed
-          status = FMCDTransactionStatus.Completed;
-          console.log(`[FMCD Debug] Lightning operation older than 10 minutes, assuming completed`);
-        } else {
-          // Recent operations or uncertain cases remain pending
-          status = FMCDTransactionStatus.Pending;
-          console.log(`[FMCD Debug] Recent operation, keeping as pending`);
-        }
+        // No outcome means operation is still in progress
+        status = FMCDTransactionStatus.Pending;
       }
 
       console.log(
