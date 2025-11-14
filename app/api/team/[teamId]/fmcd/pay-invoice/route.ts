@@ -4,6 +4,7 @@ import { authenticateFMCDRequest, fmcdRequest } from "@/lib/fmcd/utils";
 interface PayInvoiceRequest {
   federationId: string;
   invoice: string;
+  gatewayId: string;
   allowOverpay?: boolean;
 }
 
@@ -19,22 +20,26 @@ export async function POST(req: NextRequest, context: { params: Promise<{ teamId
     const { config } = authResult.data;
 
     const body: PayInvoiceRequest = await req.json();
-    const { federationId, invoice, allowOverpay } = body;
+    const { federationId, invoice, gatewayId, allowOverpay } = body;
 
     // Validate request
-    if (!federationId || !invoice) {
+    if (!federationId || !invoice || !gatewayId) {
       return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 });
     }
 
+    // Lightning payments can take 30-60+ seconds, especially for inter-federation transfers
+    // Disable retries because FMCD tracks operations and will reject duplicates
     const response = await fmcdRequest<any>({
       endpoint: "/v2/ln/pay",
       method: "POST",
       body: {
         federationId,
-        paymentRequest: invoice,
-        allowOverpay: allowOverpay || false,
+        paymentInfo: invoice,
+        gatewayId,
       },
       config,
+      maxRetries: 1, // No retries - payment operations are tracked by FMCD
+      timeoutMs: 60000, // 60 second timeout for Lightning payments
     });
 
     if (response.error) {

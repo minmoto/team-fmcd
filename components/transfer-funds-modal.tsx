@@ -221,6 +221,11 @@ export function TransferFundsModal({
   };
 
   const handleTransfer = async () => {
+    // Prevent duplicate submissions
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -231,33 +236,66 @@ export function TransferFundsModal({
       if (details.transactionChannel === TransactionChannel.Lightning) {
         // Lightning transfer via invoice
         // Step 1: Get lightning invoice from destination federation
-        const invoiceResponse = await fetch(`/api/team/${params.teamId}/fmcd/lightning-address`, {
+        // Use the first available gateway from destination federation
+        if (
+          !details.destinationFederation!.gateways ||
+          details.destinationFederation!.gateways.length === 0
+        ) {
+          throw new Error("No gateways available for destination federation");
+        }
+
+        const gatewayId = details.destinationFederation!.gateways[0].info.gateway_id;
+
+        const invoiceResponse = await fetch(`/api/team/${params.teamId}/fmcd/invoice`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             federationId: details.destinationFederation!.federation_id,
+            gatewayId: gatewayId,
             amountMsat: transferAmountMsats,
+            description: `Transfer from ${getFederationName(details.sourceFederation!)} to ${getFederationName(details.destinationFederation!)}`,
           }),
         });
 
         if (!invoiceResponse.ok) {
-          throw new Error("Failed to generate lightning invoice");
+          const errorData = await invoiceResponse.json();
+          throw new Error(errorData.error || "Failed to generate lightning invoice");
         }
 
         const { invoice } = await invoiceResponse.json();
 
         // Step 2: Pay the invoice from source federation
+        // Use the first available gateway from source federation
+        if (
+          !details.sourceFederation!.gateways ||
+          details.sourceFederation!.gateways.length === 0
+        ) {
+          throw new Error("No gateways available for source federation");
+        }
+
+        const sourceGatewayId = details.sourceFederation!.gateways[0].info.gateway_id;
+
         const payResponse = await fetch(`/api/team/${params.teamId}/fmcd/pay-invoice`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             federationId: details.sourceFederation!.federation_id,
             invoice,
+            gatewayId: sourceGatewayId,
           }),
         });
 
         if (!payResponse.ok) {
-          throw new Error("Failed to complete lightning payment");
+          const errorData = await payResponse.json().catch(() => ({}));
+
+          // Handle specific error cases
+          if (payResponse.status === 408) {
+            throw new Error(
+              "Payment is taking longer than expected. The payment may still be processing. Please check your transaction history."
+            );
+          }
+
+          throw new Error(errorData.error || "Failed to complete lightning payment");
         }
       } else {
         // Onchain transfer via Bitcoin address
@@ -271,10 +309,15 @@ export function TransferFundsModal({
         });
 
         if (!addressResponse.ok) {
-          throw new Error("Failed to generate Bitcoin address");
+          const errorData = await addressResponse.json();
+          throw new Error(errorData.error || "Failed to generate Bitcoin address");
         }
 
         const { address } = await addressResponse.json();
+
+        if (!address) {
+          throw new Error("No address received from server");
+        }
 
         // Step 2: Send Bitcoin to the address from source federation
         const sendResponse = await fetch(`/api/team/${params.teamId}/fmcd/send-onchain`, {
@@ -288,18 +331,20 @@ export function TransferFundsModal({
         });
 
         if (!sendResponse.ok) {
-          throw new Error("Failed to complete onchain transfer");
+          const errorData = await sendResponse.json();
+          throw new Error(errorData.error || "Failed to complete onchain transfer");
         }
       }
 
       setStep("complete");
 
-      // Notify parent component of successful transfer
-      if (onTransferComplete) {
-        setTimeout(() => {
+      // Notify parent component of successful transfer and close modal
+      setTimeout(() => {
+        if (onTransferComplete) {
           onTransferComplete();
-        }, 1500); // Give user time to see success message
-      }
+        }
+        onClose(); // Close modal after showing success message
+      }, 1500); // Give user time to see success message
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transfer failed");
       setStep("confirm"); // Return to confirm step on error
