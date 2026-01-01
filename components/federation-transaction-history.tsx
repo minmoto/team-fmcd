@@ -283,6 +283,33 @@ export function FederationTransactionHistory({
             </div>
           )}
 
+          {/* Lightning Invoice for lightning transactions */}
+          {transaction.type.includes("lightning") && transaction.invoice && (
+            <div className="space-y-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <span className="font-medium">Lightning Invoice</span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(transaction.invoice!, "invoice")}
+                    className="h-6 w-6 p-0"
+                  >
+                    {copiedField === "invoice" ? (
+                      <span className="text-green-600 text-xs">✓</span>
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="text-xs font-mono text-muted-foreground break-all">
+                <span className="block sm:hidden">{truncateId(transaction.invoice, 32)}</span>
+                <span className="hidden sm:block">{transaction.invoice}</span>
+              </div>
+            </div>
+          )}
+
           {/* Bitcoin Address for onchain transactions */}
           {transaction.type.includes("onchain") && transaction.address && (
             <div className="space-y-1">
@@ -533,6 +560,27 @@ export function FederationTransactionHistory({
                               {formatDistanceToNow(transaction.timestamp, { addSuffix: true })}
                             </span>
                           </div>
+                          {/* Show payment request or address inline */}
+                          {(transaction.address || transaction.invoice) && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-blue-600 dark:text-blue-400">
+                              {transaction.invoice && (
+                                <div className="flex items-center gap-1 truncate">
+                                  <Zap className="h-3 w-3 flex-shrink-0" />
+                                  <span className="font-mono truncate" title={transaction.invoice}>
+                                    {transaction.invoice.slice(0, 24)}...
+                                  </span>
+                                </div>
+                              )}
+                              {transaction.address && (
+                                <div className="flex items-center gap-1 truncate">
+                                  <Bitcoin className="h-3 w-3 flex-shrink-0" />
+                                  <span className="font-mono truncate" title={transaction.address}>
+                                    {transaction.address.slice(0, 16)}...
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 flex-shrink-0">

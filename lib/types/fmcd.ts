@@ -106,6 +106,7 @@ export interface FMCDTransaction {
   federation_id?: string;
   description?: string;
   address?: string; // Bitcoin address for onchain transactions
+  invoice?: string; // Lightning invoice for lightning transactions
 }
 
 export enum FMCDTransactionType {

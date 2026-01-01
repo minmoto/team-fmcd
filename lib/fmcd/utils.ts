@@ -354,23 +354,24 @@ export async function fetchFederationTransactions({
       let type: FMCDTransactionType = FMCDTransactionType.EcashMint;
       let status: FMCDTransactionStatus = FMCDTransactionStatus.Pending;
       let address: string | undefined;
+      let invoice: string | undefined;
 
       if (op.operationKind === "ln") {
         if (op.operationMeta?.variant?.receive) {
           type = FMCDTransactionType.LightningReceive;
-          const invoice = op.operationMeta.variant.receive.invoice;
+          invoice = op.operationMeta.variant.receive.invoice;
           if (invoice) {
             amountMsats = extractAmountFromInvoice(invoice);
           }
         } else if (op.operationMeta?.variant?.pay) {
           type = FMCDTransactionType.LightningSend;
-          const invoice = op.operationMeta.variant.pay.invoice;
+          invoice = op.operationMeta.variant.pay.invoice;
           if (invoice) {
             amountMsats = extractAmountFromInvoice(invoice);
           }
         } else if (op.operationMeta?.variant?.send) {
           type = FMCDTransactionType.LightningSend;
-          const invoice = op.operationMeta.variant.send?.invoice;
+          invoice = op.operationMeta.variant.send?.invoice;
           if (invoice) {
             amountMsats = extractAmountFromInvoice(invoice);
           }
@@ -470,6 +471,7 @@ export async function fetchFederationTransactions({
         federation_id: federationId,
         description: op.operationMeta?.description || op.operationKind || "Transaction",
         ...(includeAddress && address ? { address } : {}),
+        ...(invoice ? { invoice } : {}),
       };
 
       return transaction;
